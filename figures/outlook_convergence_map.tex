@@ -1,0 +1,21 @@
+\begin{tikzpicture}[
+    node distance=12mm and 20mm,
+    block/.style={draw, rounded corners=2pt, minimum width=32mm, minimum height=10mm, align=center, font=\small, inner sep=4pt},
+    centerblock/.style={draw, rounded corners=3pt, minimum width=38mm, minimum height=12mm, align=center, font=\small\bfseries, inner sep=5pt},
+    flow/.style={-{Latex[length=2.2mm]}, semithick}
+]
+\node[centerblock, fill=gray!10] (goal) {可持续的国产算力\\推理系统底座};
+
+\node[block, fill=blue!10, above left=18mm and 28mm of goal] (plugin) {后端插件化\\平台抽象/注册表/可合并优化};
+\node[block, fill=green!10, above right=18mm and 28mm of goal] (runtime) {资源管理与调度\\SLO/迁移/KV Cache/阶段解耦};
+\node[block, fill=orange!12, below left=18mm and 28mm of goal] (eval) {统一评测与观测\\近真实负载/成本/稳定性指标};
+\node[block, fill=purple!10, below right=18mm and 28mm of goal] (model) {模型结构持续演进\\MoE/MLA/多模态/语音交互};
+
+\draw[flow] (plugin) -- (goal);
+\draw[flow] (runtime) -- (goal);
+\draw[flow] (eval) -- (goal);
+\draw[flow] (model) -- (goal);
+
+\node[font=\scriptsize, align=center, above=3mm of goal] {未来竞争不再是单一热点优化，而是多条系统能力线的收敛。};
+\node[font=\scriptsize, align=center, below=3mm of goal] {平台抽象、运行时组织、统一评测与模型演进需要同步推进。};
+\end{tikzpicture}

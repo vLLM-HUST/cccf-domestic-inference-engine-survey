@@ -1,0 +1,29 @@
+\begin{tikzpicture}[
+    node distance=5mm and 4mm,
+    stage/.style={draw, rounded corners=2pt, minimum width=22mm, minimum height=10mm, align=center, font=\small, inner sep=4pt},
+    side/.style={draw, rounded corners=2pt, align=center, font=\scriptsize, inner sep=3pt},
+    flow/.style={-{Latex[length=2.2mm]}, semithick}
+]
+\node[stage, fill=gray!10] (ingress) {请求进入\\文本/多模态/工具调用};
+\node[stage, fill=blue!10, right=of ingress] (normalize) {请求整形\\长度 bucket / SLO};
+\node[stage, fill=green!10, right=of normalize] (prefill) {前处理与 Prefill\\视觉/语音编码};
+\node[stage, fill=green!10, right=of prefill] (decode) {Decode\\采样/约束执行};
+\node[stage, fill=orange!10, right=of decode] (verify) {验证与回退\\grammar / speculative};
+\node[stage, fill=gray!10, right=of verify] (finish) {响应返回\\状态释放与观测};
+
+\node[side, fill=yellow!8, below=9mm of prefill] (cache) {共享状态\\KV Cache / prefix / 迁移元数据};
+\node[side, fill=yellow!8, below=9mm of decode] (tool) {外部交互\\工具执行 / 回注 / 再进入};
+
+\draw[flow] (ingress) -- (normalize);
+\draw[flow] (normalize) -- (prefill);
+\draw[flow] (prefill) -- (decode);
+\draw[flow] (decode) -- (verify);
+\draw[flow] (verify) -- (finish);
+\draw[flow, dashed] (prefill) -- (cache);
+\draw[flow, dashed] (decode) -- (cache);
+\draw[flow, dashed] (verify) -- (cache);
+\draw[flow, dashed] (decode) -- (tool);
+\draw[flow, dashed] (tool.west) |- (normalize.south);
+
+\node[font=\scriptsize, align=center, below=8mm of normalize] {复杂请求的关键难点不在单步执行，而在跨阶段状态传递、资源复用与回退一致性。};
+\end{tikzpicture}

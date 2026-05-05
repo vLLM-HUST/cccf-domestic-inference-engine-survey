@@ -1,0 +1,32 @@
+\begin{tikzpicture}[
+    node distance=5mm and 10mm,
+    block/.style={draw, rounded corners=2pt, minimum width=31mm, minimum height=9mm, align=center, font=\small, inner sep=4pt},
+    note/.style={draw, rounded corners=2pt, minimum width=31mm, align=center, font=\scriptsize, inner sep=3pt},
+    flow/.style={-{Latex[length=2.2mm]}, semithick}
+]
+\node[block, fill=gray!10, minimum width=42mm] (goal) {国产推理引擎路线选择};
+\node[font=\scriptsize, align=center, above=1mm of goal] {核心张力：生态兼容性、平台特化深度、交付稳定性};
+
+\node[block, fill=blue!10, below left=12mm and 31mm of goal] (upstream) {开源主干后端适配\\vLLM / SGLang / vLLM-Ascend};
+\node[block, fill=orange!12, below=12mm of goal] (hybrid) {混合式架构\\vLLM-HUST\\上层兼容 + 底层热点特化};
+\node[block, fill=green!10, below right=12mm and 31mm of goal] (integrated) {一体化方案\\MindIE / 编译器 / 运行时协同};
+
+\node[note, fill=blue!5, below=of upstream] (u1) {优势：生态吸收快\\模型跟进快};
+\node[note, fill=red!5, below=of u1] (u2) {代价：patch 累积\\抽象边界易失稳};
+
+\node[note, fill=orange!6, below=of hybrid] (h1) {优势：兼顾兼容性\\与平台优化};
+\node[note, fill=red!5, below=of h1] (h2) {代价：体系复杂\\组织门槛高};
+
+\node[note, fill=green!5, below=of integrated] (i1) {优势：交付稳定\\平台约束强};
+\node[note, fill=red!5, below=of i1] (i2) {代价：生态兼容慢\\上游响应较慢};
+
+\draw[flow] (goal) -- (upstream);
+\draw[flow] (goal) -- (hybrid);
+\draw[flow] (goal) -- (integrated);
+\draw[flow] (upstream) -- (u1);
+\draw[flow] (u1) -- (u2);
+\draw[flow] (hybrid) -- (h1);
+\draw[flow] (h1) -- (h2);
+\draw[flow] (integrated) -- (i1);
+\draw[flow] (i1) -- (i2);
+\end{tikzpicture}

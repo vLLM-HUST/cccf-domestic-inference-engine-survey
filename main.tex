@@ -1,0 +1,116 @@
+\documentclass[UTF8,a4paper,12pt]{ctexart}
+
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{titlesec}
+\usepackage{caption}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+\usepackage{tikz}
+\usepackage{algpseudocode}
+
+\geometry{margin=2.4cm}
+\hypersetup{colorlinks=true, linkcolor=black, citecolor=black, urlcolor=blue}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0pt}
+\setlength{\emergencystretch}{2em}
+\setlist{nosep}
+\captionsetup{font=small, labelfont=bf}
+\renewcommand{\bibname}{参考文献}
+\renewcommand{\refname}{参考文献}
+\renewcommand{\arraystretch}{1.15}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\usetikzlibrary{arrows.meta,fit,positioning,shapes.geometric}
+\newcounter{algorithm}
+\renewcommand{\thealgorithm}{\arabic{algorithm}}
+
+\titleformat{\section}{\centering\heiti\zihao{-3}}{\thesection}{0.75em}{}
+\titleformat{\subsection}{\heiti\zihao{4}}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\heiti\zihao{-4}}{\thesubsubsection}{0.5em}{}
+
+\titlespacing*{\section}{0pt}{1.2em}{0.8em}
+\titlespacing*{\subsection}{0pt}{0.8em}{0.4em}
+\titlespacing*{\subsubsection}{0pt}{0.6em}{0.3em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+\newcommand{\papertitlecn}{国产算力平台大模型推理引擎综述}
+\newcommand{\papertitleen}{A Survey of Large-Model Inference Engines on Domestic Computing Platforms}
+\newcommand{\authorscn}{作者一$^{1}$，作者二$^{2}$}
+\newcommand{\affiliationscn}{$^{1}$单位一，城市 邮编\quad $^{2}$单位二，城市 邮编}
+\newcommand{\contactline}{通信作者：姓名，邮箱：author@example.com}
+
+\newcommand{\makecccfstyletitle}{
+	\begin{center}
+		{\bfseries\zihao{2} \papertitlecn\par}
+		\vspace{0.75em}
+		{\zihao{-4} \papertitleen\par}
+		\vspace{1.1em}
+		{\zihao{4} \authorscn\par}
+		\vspace{0.5em}
+		{\zihao{-4} \affiliationscn\par}
+		\vspace{0.3em}
+		{\zihao{5} \contactline\par}
+	\end{center}
+	\vspace{0.8em}
+}
+
+\newenvironment{cnabstract}{
+	\noindent\textbf{摘\ 要：}
+}{\par}
+
+\newenvironment{enabstract}{
+	\noindent\textbf{Abstract: }
+}{\par}
+
+\begin{document}
+
+\makecccfstyletitle
+
+\begin{cnabstract}
+本文面向国产算力平台上的大模型推理系统，围绕执行架构、算子与图编译、KV Cache 管理、批处理调度、长上下文、多模态与结构化输出等关键问题，讨论国产芯片、编译栈、运行时和部署环境如何重塑推理引擎的设计边界。与通用 LLM serving 综述不同，本文不把相关工作简单铺展为功能清单，而是引入一个更贴近国内推理引擎建设任务的分析骨架：以统一抽象、统一指标和可观测能力为底座，以执行与通信主路径、状态分层治理主路径以及压缩加速与单位 token 成本协同主路径为核心，分析平台异构、运行时状态复杂化与工程交付闭环如何相互耦合，并据此将现有技术路线归纳为开源主干后端适配、平台一体化方案与混合式架构三类。进一步地，本文比较不同路线在生态兼容性、性能上限、复杂任务支持、运行时治理与长期维护成本上的差异，强调国产推理系统的核心问题并非局部算子是否足够快，而是平台抽象、运行时组织和运维闭环能否同时成立。最后，本文结合 vLLM-HUST、vLLM-Ascend、MindIE、LMDeploy 等实践，讨论插件化平台能力、复杂请求状态管理、统一评测和交付控制面的后续方向，以期为国产推理系统的研发选型与架构演进提供更具可操作性的分析框架。
+\end{cnabstract}
+
+\noindent\textbf{关键词：}国产算力平台；大模型推理；推理引擎；运行时；软硬协同
+
+\vspace{0.5em}
+
+\begin{enabstract}
+This article surveys large-model inference systems on domestic computing platforms. Rather than offering another generic overview of LLM serving, it examines how hardware heterogeneity, runtime state complexity, and production-delivery constraints jointly reshape the design space of inference engines on domestic platforms. To better match the practical decomposition of domestic inference-engine construction, the paper uses an explicit analytical scaffold: a unified abstraction, metric, and observability base layer, together with three main technical paths for execution-and-communication optimization, state management, and compression-cost co-optimization. Under this scaffold, it reviews execution architecture, operators and graph compilation, KV cache management, batching and scheduling, long-context support, multimodal processing, and structured generation. It groups current technical routes into upstream-backend adaptation, vertically integrated stacks, and hybrid architectures, compares their tradeoffs in ecosystem compatibility, performance ceiling, complex-task support, runtime governance, and long-term maintainability, and argues that the key issue is not isolated kernel speed but whether platform boundaries, request-state management, and delivery workflows can evolve together. Based on systems such as vLLM-HUST, vLLM-Ascend, MindIE, and LMDeploy, it further outlines future directions including plugin-oriented platform contracts, complex-request runtime management, unified evaluation, and control-plane tooling for deployment and regression handling.
+\end{enabstract}
+
+\noindent\textbf{Keywords: }domestic computing platforms; large-model inference; inference engine; runtime systems; hardware-software co-design
+
+\vspace{0.8em}
+
+\begin{spacing}{1.2}
+
+\input{sections/01_introduction}
+\input{sections/02_architecture}
+\input{sections/03_engines}
+\input{sections/04_challenges}
+\input{sections/05_outlook}
+\input{sections/06_conclusion}
+
+\begingroup
+\sloppy
+\bibliographystyle{unsrtnat}
+\bibliography{refs}
+\endgroup
+
+\end{spacing}
+
+\end{document}

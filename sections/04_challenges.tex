@@ -1,0 +1,99 @@
+\section{关键挑战}
+
+综合前文，国产推理引擎面临的难点并不只是单点性能不足，而是多个系统目标同时受限：既要持续吸收上游能力演进，又要适应本土硬件和基础软件栈的边界，还要在真实业务负载下维持稳定交付。表\ref{tab:challenge-map} 对本文讨论的几类主要挑战作了摘要。从系统视角看，这些挑战之所以顽固，不在于每一项都“特别新”，而在于它们会相互放大。平台差异会抬高抽象成本，抽象不稳又会削弱复杂任务支持；复杂任务支持一旦采用侵入式补丁实现，又会加速本地分叉累积；而如果评测仍主要停留在理想化 benchmark，团队就很难及时识别这些结构性问题。换言之，国产推理引擎面对的不是若干彼此独立的优化事项，而是一组互相耦合的系统约束：模型跟进速度、后端稳定性、服务级目标、运维复杂度和长期可维护性必须同时成立，任何一项明显失衡，都会迫使系统在其他层面以更高代价补偿。
+
+若与前文的关键技术清单对照，还可以更清楚地理解这些挑战为什么必须被单独讨论：一旦统一执行抽象、通信运行时和阶段解耦机制缺位，系统通常会先在吞吐与时延主路径上暴露不稳定；一旦前缀索引、多级驻留和状态迁移能力不足，问题通常会先在长上下文和高并发条件下显现；一旦量化、KV 压缩和成本核算没有进入同一闭环，压缩收益就往往只存在于离线实验而无法沉淀为真实生产能力。换言之，本节讨论的并不是松散风险列表，而是“哪些关键技术点一旦缺席，国产推理引擎会沿着怎样的路径出现系统性缺口”。
+
+\begin{table}[t]
+\centering
+\small
+\caption{国产推理引擎关键挑战比较}
+\label{tab:challenge-map}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3cm}YY}
+\toprule
+挑战来源 & 主要冲击层 & 典型后果 \\
+\midrule
+硬件异构与后端碎片化 & 执行层、算子接口、通信路径 & 共享路径分叉、正确性边界不一致、维护成本持续上升 \\
+复杂任务与多模态负载 & 调度、缓存、图模式与前处理链路 & 阶段争用加剧、时延波动放大、局部功能可用但端到端不稳定 \\
+压缩收益与系统成本错配 & 量化路径、KV 状态、调度与成本核算 & 低比特收益不稳定、精度与时延相互牵制、单位 token 成本难形成闭环 \\
+上游快速演进与本地分叉 & 平台抽象、插件接口与共享模块 & patch 累积、合并困难、对新模型和新特性的跟进滞后 \\
+评测体系与真实业务脱节 & benchmark 设计、运维指标与资源评估 & 优化方向失真、离线结论与生产表现偏离 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{硬件异构与后端碎片化}
+
+不同国产加速平台在编程接口、图模式约束、算子能力与通信栈成熟度上差异明显，导致共享推理路径中容易出现大量平台特化分支。若缺乏清晰的后端边界，系统会迅速失去可维护性。表面上看，这只是“多写几段条件分支”的问题，实际上它会逐步侵蚀调度、缓存、采样乃至接口层的独立演进能力。更棘手的是，硬件异构通常并不只表现为性能差异，还表现为正确性与稳定性边界不同。例如，某些后端对动态 shape 更敏感，某些后端对特定融合算子支持不完备，某些平台则在通信或异步执行语义上与主流实现存在差异。一旦这些差异没有被收敛到统一的后端抽象中，系统开发者就会被迫在共享路径上叠加越来越多的特判逻辑，使代码难以测试、难以合并，也难以为新模型复用。这里真正困难的，不是“是否存在统一抽象”，而是抽象该把什么纳入、把什么留在边界外。若抽象过薄，平台差异会反复溢出到 worker、调度器、采样器和 API 层；若抽象过厚，又容易把短期平台特例固化成长期接口负担。较健康的工程策略，通常不是试图用单一层吞掉所有差异，而是把平台能力差异、启动期环境治理和运行期异常护栏分层处理：平台层负责设备能力与后端选择，运行时层负责降级、回退和状态一致性，环境治理层负责依赖、驱动和工具链的前置修复。这种分层的价值不只是“代码更整洁”，更重要的是能把不同类型的问题压回各自的责任边界，使系统在面对新硬件或新模型时不至于整条执行链一起失稳。
+
+这也是为什么许多通用部署项目即便能够在共享生态中快速演进，一旦迁移到新的硬件后端，仍然需要经历较长的抽象重构周期。Text Generation Inference、MLC-LLM、llama.cpp、ExLlamaV2 与 Triton Inference Server 等系统对运行时、设备接口和算子组织做了不同取舍\citep{tgi,mlcllm,llamacpp,exllamav2,tritonserver}；而 vAttention、QServe 与 FlashMLA 这类较新的工作又进一步表明，一旦目标转向长上下文、高吞吐或低比特量化，系统边界和底层内核实现会比传统框架式适配更快成为瓶颈\citep{kwon2024vattention,wang2024qserve,deepseekflashmla}。因此，国产后端若要在这些生态上实现高质量适配，往往首先要面对的不是单点算子问题，而是系统边界和接口契约问题。
+
+\subsection{复杂任务场景的能力补齐}
+
+当前真实负载已从单轮文本生成扩展到长上下文、多模态理解、结构化输出、推理链、工具调用和多 Agent 协同\citep{dong2024xgrammar,liu2025elasticmm,xie2025aimetropolis}。相应地，推理引擎的优化目标也不再是单一路径 decode，而是跨阶段状态管理：结构化输出要求把约束执行压进采样环路，工具调用要求支持生成、外部执行与回注之间的往返切换，多模态请求要求消化更长的前处理链和更剧烈的 shape 波动，多 Agent 负载则要求识别真实依赖并消除伪串行。对国产平台，难点不在接口名义上“可用”，而在这些能力会同时冲击调度、缓存和图模式。以国内多模态链路为例，多图与文档请求受视觉 token 膨胀和分辨率离散化约束，视频请求会放大 encode 与 decode 的资源竞争，语音对话则引入 streaming chunk、语音 token 和实时打断恢复；若运行时仍按文本模型的单阶段假设组织执行，就很容易出现局部功能可用而端到端时延和稳定性失控的情况\citep{wang2024qwen2vl,chen2024internvl2,wang2024cogvlm2,chu2024qwen2audio,zeng2024glm4voice,cui2026minicpmo45}。更深一层看，复杂任务场景真正改变的是“状态”的性质。文本 serving 时代，系统重点管理的是请求队列、KV Cache 和 batch 形状；而进入多模态、工具调用和 reasoning 场景后，运行时还必须额外管理视觉前缀、语法状态、工具回注上下文、外部执行等待、流式中断与恢复等状态对象。它们既不是纯粹的模型内部变量，也不是可以完全交给服务层处理的外围数据，而是会直接影响调度顺序、缓存复用和回退路径选择的运行时实体。也正因此，复杂任务支持的核心不只是完成能力接入，而是要让这些新增状态在 prefill、decode、验证、外部交互与回收之间有明确且低成本的迁移规则。
+
+图\ref{fig:complex-request-lifecycle} 从时间顺序上概括了复杂请求进入运行时后的生命周期。与传统文本生成只需组织 prefill 与 decode 不同，国内实际部署中常见的多模态、结构化输出和工具调用请求，往往会在前处理、约束校验、外部回注和状态回收之间来回穿梭。把这些阶段单独画出来，有助于解释为什么国产推理引擎的挑战不只是“多支持一个能力”，而是如何在多个阶段之间维持稳定的状态传递和资源复用。
+
+\begin{figure}[t]
+\centering
+\resizebox{0.98\linewidth}{!}{\input{figures/complex_request_lifecycle}}
+\caption{复杂请求生命周期示意图}
+\label{fig:complex-request-lifecycle}
+\end{figure}
+
+为了更直观地说明这种“能力补齐”为什么会迅速演变成系统问题，算法\ref{alg:runtime-loop} 给出了一个概念性伪代码。它并不对应某个单一项目的源码实现，而是把国产推理引擎在复杂请求下必须反复处理的几个关键决策显式化：请求要先被分类和整形，再决定是走 prefill、decode 还是多模态前处理分支；随后运行时还要同步维护图模式、缓存状态、结构化约束以及异常回退路径。也正因如此，复杂任务支持本质上是一个贯穿执行、调度与缓存的闭环，而不是附着在文本生成主路径外侧的附加功能。
+
+\begin{figure}[t]
+\centering
+\refstepcounter{algorithm}
+\captionsetup{type=figure}
+\begin{minipage}{0.96\linewidth}
+\small
+\textbf{算法\thealgorithm}\quad 复杂请求下的国产推理引擎运行时闭环（概念性伪代码）\label{alg:runtime-loop}
+\vspace{0.4em}
+\begin{algorithmic}[1]
+\State \textbf{Input:} request stream $R$, platform capability set $P$
+\State initialize scheduler state, cache state, and backend registry
+\ForAll{incoming request $r \in R$}
+	\State classify $r$ as text, long-context, multimodal, or tool-calling workload
+	\State normalize prompt shape, length bucket, and service-level objective
+	\If{$r$ contains visual or audio prefix}
+		\State run preprocessor and stage encoder outputs into shared runtime state
+	\EndIf
+	\If{structured output or tool invocation is required}
+		\State attach grammar state or external-call state to decoding context
+	\EndIf
+	\State choose execution mode from eager, graph, or fallback path according to $P$
+	\State update prefix cache, KV blocks, and migration metadata before execution
+	\While{$r$ is not finished}
+		\State schedule prefill, decode, or verification step under current batch plan
+		\State monitor TTFT/TPOT pressure, shape drift, and backend exceptions
+		\If{constraint violation or backend instability is detected}
+			\State trigger rollback, degrade execution mode, or rebalance request placement
+		\EndIf
+	\EndWhile
+	\State emit response, release cache blocks, and record observability signals
+\EndFor
+\end{algorithmic}
+\end{minipage}
+\end{figure}
+
+推测解码、约束解码和复杂控制流生成进一步抬高了对执行一致性和调度灵活性的要求。SpecInfer 已经说明，新的生成加速机制会引入新的验证与回退路径，如果后端抽象和服务编排没有预留空间，局部优化反而会放大系统复杂度\citep{specinfer2023}。Leviathan、Medusa、EAGLE 与 Lookahead Decoding 分别代表了辅助模型、多头预测、特征不确定性建模与并行前瞻等路线\citep{leviathan2023fast,cai2024medusa,li2024eagle,fu2024lookahead}。这些方法的共同前提是运行时必须支持更细粒度的候选组织、验证与回退。硬件侧经验也说明收益高度条件化：在 MI300X 上，speculative decoding 主要受益于小 batch、带宽受限的 decode，随着 batch 增大收益会明显收缩；进入多模态 serving 后，text-only drafter 与 multimodal drafter 还要在额外开销和 acceptance length 之间重新权衡\citep{singh2025specdecmi300x,kamani2025multimodalspecdec}。因此，推测解码不是可独立开启的局部优化，而是与 batch 组织、图执行模式、视觉 token 压缩和验证链路深度耦合的系统机制。这类现象对国产平台尤其关键，因为本地硬件往往在图模式切换、动态 shape 支持和异步执行语义上更敏感。一个在主流 GPU 平台上“只是多一次验证”的机制，迁移到新的后端后，可能同时意味着图缓存失效、batch 形状离散化加剧和异常回退链变长。于是，复杂任务支持是否可靠，最终评估的就不再只是某种 decoding 技术本身，而是系统能否在能力增强后仍维持可预测的状态空间规模。真正成熟的国产推理引擎，应当把这些新能力视作运行时状态机的自然扩展，而不是临时外挂在主循环外侧的特性开关。
+
+\subsection{压缩加速与单位 token 成本协同}
+
+对国产推理引擎而言，“低成本”并不是部署阶段最后再去追问的经济性指标，而是与执行效率和状态治理同级的系统目标。问题在于，压缩策略的收益往往不是线性兑现的：同一组量化参数在不同后端、不同上下文长度和不同负载强度下，可能分别表现为吞吐提升、尾时延恶化、状态迁移变多或精度明显波动。于是，很多团队虽然在模型层面已经得到不错的压缩结果，但一进入真实 serving 场景，就会发现低比特路径与通信粒度、图模式命中、KV 驻留层次和调度桶化同时发生耦合，使单位 token 成本难以稳定下降。
+
+这也是为什么压缩问题在国产场景下更容易从“模型压缩”演变为“系统协同”问题。QServe 说明，只有把量化、kernel 组织和 serving runtime 一起设计，低比特收益才可能在真实服务路径中落地\citep{wang2024qserve}；KIVI、SnapKV 等工作则进一步表明，长上下文场景下的状态压缩如果不和缓存元数据、恢复路径与服务质量门限一起考虑，就会把容量节省重新转化为恢复时延或命中率损失\citep{liu2024kivi,li2024snapkv}。对国产平台而言，这种耦合还会被放大，因为许多后端对低比特算子、动态 shape 和异步搬运的支持边界并不一致。也正因此，压缩加速真正困难的地方并不是有没有某种量化算法，而是系统能否把“配置参数--执行效率--状态占用--服务质量--单位 token 成本”组织成同一套可观测、可回归、可决策的闭环。如果不能做到这一点，那么压缩策略很容易停留在离线实验中的阶段性结论，难以成为国产推理引擎的稳定生产能力。
+
+\subsection{上游演进与本地分叉维护}
+
+高性能推理框架仍在快速演化。国产后端如果通过侵入式修改共享路径获得短期收益，后续将面临高昂的合并成本。因此，如何通过插件、注册表、平台抽象和配置门控实现“可合并的本地优化”，是工程实践中的核心议题。这一问题的本质，是短期交付与长期演进之间的张力。许多本地优化在初期看似合理，例如直接修改共享 model runner、复制上游模块后做平台特化、或在公共调度路径中快速加入平台分支。这些做法能够尽快打通关键模型，但随着上游版本迭代，它们会迅速演变成难以维护的分叉。对综述对象中的国产推理项目而言，真正具有持续价值的能力，不仅是“适配成功”，而是“适配方式本身是否可持续”。从工程组织角度说，本地分叉之所以危险，还因为它会逐步改变团队的优化激励。若某个项目长期依赖复制上游模块并在本地修补，团队最容易积累的是“快速打补丁”的经验，而不是“设计稳定扩展面”的能力；随着时间推移，任何新模型、新特性和新后端都会优先以继续分叉的方式落地，最终导致系统在名义上仍与上游兼容，实则已经丧失合并能力。相反，若平台特化更多收敛在插件、注册表、解析器、模型映射和受控配置门面中，团队就更有机会把一次性的适配劳动沉淀为可复用的工程机制。以 vLLM-HUST 这类做法为例，其价值不只在于支持某个具体国产平台，更在于尝试把平台插件链、运行时护栏、多模态注册中心、reasoning parser 和 tool parser 这些高变动能力压在可独立演进的外围接口上\citep{vllmhust}。因此，讨论“上游演进与本地分叉维护”时，不能只把它理解为版本合并负担。更本质的问题是：一个国产推理引擎是否在逐步形成自己的模块化演进秩序。若平台适配、模型接入、协议兼容和复杂输出解析都能被压回清晰的扩展边界，后续新增能力就更可能表现为局部增量；反之，如果这些变化都直接冲击共享执行链，那么系统每次升级都会重新暴露整体脆弱性。这也是为什么 merge-safe 并不是“对上游友好”的附属要求，而是国产推理引擎能否持续演进的核心条件。
+
+\subsection{评测体系与真实业务鸿沟}
+
+当前不少推理系统的优化仍主要围绕静态 benchmark 展开，例如固定 batch、固定上下文长度或单一模型族上的吞吐对比。但国产推理引擎面向的真实业务往往包含请求长度分布变化大、多租户并发、冷热模型混部、工具调用链条长和 SLA 约束严格等特征。若评测体系只覆盖理想化场景，就很难准确反映系统在生产环境中的优势与短板。因此，未来评测体系需要从“单点性能测试”扩展为“端到端工作负载评测”，将首 token 时延、稳定吞吐、缓存命中率、异常恢复时间、升级可用性和资源成本等指标纳入统一分析框架。这也是国产推理引擎从工程实现走向体系成熟的重要标志。在这一点上，OpenCompass 与 FlagPerf 分别代表了模型能力评测和系统性能评测两个侧面的生态努力\citep{opencompass,flagperf}。前者帮助界定模型在多任务、多语言与复杂能力维度上的效果边界，后者则更强调硬件与系统栈在统一基准上的性能呈现。对于国产推理引擎而言，真正有价值的评测应当把这两类视角连接起来，即既看模型效果，也看支撑这些效果所付出的系统成本。
+
+进一步说，评测体系的短板并不只是“样本不够真实”，而在于很多关键系统代价缺乏统一表达。例如，长上下文服务是否真正受益于缓存复用，要看命中率、驱逐策略和跨阶段干扰；复杂调度是否有效，要看 SLO 达成率、迁移开销和队列整形效果；多模态 serving 是否可落地，则要看 encode/prefill/decode 三类阶段的资源占用是否被同时纳入统计。Llumnix、SOLA 与 ElasticMM 等工作之所以对综述有价值，正在于它们把动态迁移、SLO 感知与多模态阶段并行这些通常被 benchmark 忽略的系统变量显式化了\citep{sun2024llumnix,hong2025sola,liu2025elasticmm}。如果国产推理引擎缺乏这类近真实负载的度量框架，就很容易在评测环节高估局部优化、低估长期运维成本。
+
+更进一步，评测体系本身也应当区分不同层次的问题。底层算子和内核优化适合用 microbenchmark 验证，其目的在于确认单点实现是否达到预期；运行时调度、缓存和回退策略需要用受控 serving workload 验证，其重点是吞吐、TTFT、TPOT 与尾时延；而平台演进能力、稳定交付能力和运维代价，则更适合通过持续集成基线、版本升级回归、真实流量回放和故障演练来评估。若这些层次被混在一起讨论，团队就很容易用“单点更快”替代“系统更稳”，用“离线吞吐更高”替代“生产交付更可持续”。国产推理引擎若要真正进入成熟阶段，评测闭环本身也必须从展示型 benchmark 转向决策型 benchmark，即能够直接回答哪一类路线在何种业务约束下更值得继续投入。
