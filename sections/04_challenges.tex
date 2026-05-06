@@ -22,6 +22,50 @@
 \end{tabularx}
 \end{table}
 
+将公开社区讨论纳入观察可以看到，一线团队高频暴露的问题与本文挑战分解高度同构。公开部署记录与工程经验总结反复聚焦于版本矩阵对齐、PD 分离与双机组网稳定性、MindIE 服务化配置可控性，以及 LMDeploy 与 vLLM 在国产 GPU/信创环境中的适配取舍\citep{zhihu_vllm_ascend_guide,zhihu_vllm_pd_migration,zhihu_mindie_deploy,zhihu_lmdeploy_domestic}。这些讨论虽不等价于可复现实验，但能清晰揭示“真实摩擦先出现在何处”，并解释为何环境治理、服务模板与平台工具链在工程上与执行内核同等关键。
+
+新一轮整理到的社区材料进一步说明，真实选型往往围绕组织能力边界而不是理论峰值展开。华为 Ascend 一体机 910B3 的部署实录把镜像权限、宿主机设备映射、环境脚本、张量并行参数与 pytorch\_npu 检查写成一整套前置步骤，说明在信创或一体机场景里，“先稳定启动起来”本身就是核心工程门槛\citep{zhihu_ascend_appliance_mindie_vllm}；另一篇对 vLLM、SGLang 与 llama.cpp 的工程比较，则把高并发服务、复杂 Agent/结构化输出、端侧部署与国产化路径分别对应到不同引擎选择，并把 MindIE 放在官方国产化交付路线下讨论\citep{zhihu_vllm_sglang_llamacpp_compare}。结合公开社区中“国产化环境下的大模型框架部署”“MindIE 与 vLLM 对比”“vLLM vs LMDeploy 选型”“SGLang vs vLLM 选型”等高频讨论，可以更清楚地看到：社区实际上并不把路线差异理解为单一框架偏好，而是理解为“谁来承担环境复杂度、谁来提供服务模板、谁来对高并发或复杂控制流负责”的工程分工问题。
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{社区讨论中高频暴露的国产推理引擎工程摩擦点}
+\label{tab:community-frictions}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.0cm}p{5.2cm}X}
+\toprule
+社区高频主题 & 公开可见讨论线索 & 反映出的系统挑战 \\
+\midrule
+版本矩阵与插件对齐 & vLLM-Ascend 部署/迁移实战反复强调上游 vLLM、插件分支、CANN 与 torch\_npu 必须严格对应\citep{zhihu_vllm_ascend_guide,zhihu_vllm_pd_migration} & 平台抽象若不稳定，后端适配就会退化为脆弱的版本绑定，直接放大硬件异构与共享路径分叉问题 \\
+PD 分离与双机组网 & 社区记录持续讨论 PD 分离、RoCE/HCCL 连通性、双机组网性能偏低等问题\citep{zhihu_vllm_pd_migration,xhs_search_vllm_ascend,xhs_search_mindie} & 调度、状态迁移和网络控制面若没有被显式设计，分布式 serving 很容易在容量、时延和稳定性之间失衡 \\
+服务化模板与配置敏感性 & MindIE 相关文章与搜索结果高频出现服务化组件、配置模板、TTFT 调优和部署踩坑总结\citep{zhihu_mindie_deploy,xhs_search_mindie} & 一体化方案的真正门槛不只是执行性能，而是服务层参数、监控和回退路径是否足够可控 \\
+框架选型与国产 GPU 适配 & LMDeploy 相关讨论集中在国产 GPU/信创环境适配、多模态支持、量化部署与与 vLLM 的取舍\citep{zhihu_lmdeploy_domestic,xhs_search_lmdeploy} & 路线选择本质上是生态兼容、工具链成熟度和本土硬件协同优化之间的再平衡，而非单点跑分比较 \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+如果把前文的路线比较与本节挑战分解合在一起看，还可以得到一个更直接的判断：不同路线并不是面对同一组问题再做不同优化，而是会把“版本矩阵、网络控制面、缓存/调度、运维回退”这些挑战优先暴露在不同边界上。也就是说，路线选择本身就在决定团队首先要在哪里投入系统能力。表\ref{tab:route-challenge-mapping} 用更工程化的方式把这一点展开，有助于把“选框架”还原成“决定先解决哪类系统问题”。
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{不同国产推理路线与关键挑战的映射关系}
+\label{tab:route-challenge-mapping}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.1cm}p{2.8cm}p{2.5cm}p{2.8cm}p{2.8cm}X}
+\toprule
+代表路线 & 版本矩阵/环境门槛 & 网络与分布式风险 & 缓存/调度压力 & 运维与回退焦点 & 更需要优先建设的系统能力 \\
+\midrule
+vLLM-Ascend 类开源后端适配 & 高。上游主干、插件分支、CANN 与 torch\_npu 对齐要求强，环境预检缺失时很容易在启动阶段失败\citep{vllmascend,zhihu_vllm_ascend_guide,zhihu_vllm_pd_migration,zhihu_ascend_appliance_mindie_vllm} & 中到高。PD 分离、多机 RoCE/HCCL 连通性和阶段解耦常在扩容时暴露问题\citep{zhihu_vllm_pd_migration,xhs_search_vllm_ascend} & 高。更容易先沿用上游连续批处理与 KV 组织，再逐步补本土平台约束，长上下文和复杂 shape 下调度抖动更敏感 & 高。需要围绕环境校验、插件失配、图模式回退与服务启动护栏建立可观测修复路径 & 平台能力探测、版本矩阵校验、分布式连通性检查和主链外侧治理工具 \\
+MindIE 类一体化方案 & 中。更多复杂度被平台镜像、模板和组件版本收敛，但外部团队对底层差异的显式控制较弱\citep{mindie,zhihu_mindie_deploy,zhihu_ascend_appliance_mindie_vllm} & 中。网络与服务编排问题更多表现为平台部署参数、服务组件协同与交付流程约束 & 中。缓存、调度与编译优化更容易被平台内部统一处理，但也更依赖平台默认策略与产品节奏 & 高。监控、配置模板、回滚路径与交付责任集中，是一体化路线真正的成败点\citep{zhihu_mindie_deploy,xhs_search_mindie,xhs_search_domestic_deploy} & 模板化部署、监控告警、配置基线、统一回归与平台级问题定位闭环 \\
+LMDeploy 类工具链强化路线 & 中。模型支持矩阵、量化路径和不同硬件上的最佳实践需要逐平台核验\citep{lmdeploy,zhihu_lmdeploy_domestic,xhs_search_lmdeploy} & 中。分布式风险通常不先表现为链路不可用，而是表现为不同部署形态下性能与稳定性的权衡不透明 & 中到高。工具链强调高性能部署与模型接入效率，但在国产 GPU/信创环境中，缓存策略、量化收益和调度参数常需要额外试配 & 中到高。选型时更关心部署脚本、量化回退、多模型兼容和工程试验效率\citep{zhihu_lmdeploy_domestic,xhs_search_lmdeploy,xhs_search_domestic_deploy} & 面向不同平台的性能基线、量化/非量化双路径、模型接入自动化和快速回归脚本 \\
+vLLM-HUST 类混合式路线 & 中到高。既要跟上上游接口变化，又要维持本地插件、护栏和治理层的边界稳定\citep{vllmhust} & 中到高。网络与分布式问题不仅来自链路本身，还来自哪些能力留在主链、哪些能力下沉到外围治理层的架构选择 & 高。要同时承接上游 serving 主体与本地化能力扩展，缓存、调度、多模态和复杂控制流更容易形成横向耦合 & 高。若模块边界经营不好，最容易同时继承上游复杂度与本地特化补丁负担 & 模块化扩展面、插件契约、外围治理工具、复杂能力注册中心与 merge-safe 演进机制 \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+与第 3 节表\ref{tab:community-route-selection} 对照时，关键结论不是“哪条路线天然更优”，而是“不同路线把复杂度分配到不同系统边界”：vLLM-Ascend 更早暴露版本矩阵与分布式连通性，MindIE 更早暴露模板治理与平台回滚，LMDeploy 更早暴露跨平台基线与量化回退，SGLang 更早暴露复杂控制流与执行状态组织，混合式路线更早暴露模块边界经营与长期演进秩序。这个结论比抽象比较“先进性”更符合综述所需的决策框架。
+
 \subsection{硬件异构与后端碎片化}
 
 不同国产加速平台在编程接口、图模式约束、算子能力与通信栈成熟度上差异明显，导致共享推理路径中容易出现大量平台特化分支。若缺乏清晰的后端边界，系统会迅速失去可维护性。表面上看，这只是“多写几段条件分支”的问题，实际上它会逐步侵蚀调度、缓存、采样乃至接口层的独立演进能力。更棘手的是，硬件异构通常并不只表现为性能差异，还表现为正确性与稳定性边界不同。例如，某些后端对动态 shape 更敏感，某些后端对特定融合算子支持不完备，某些平台则在通信或异步执行语义上与主流实现存在差异。一旦这些差异没有被收敛到统一的后端抽象中，系统开发者就会被迫在共享路径上叠加越来越多的特判逻辑，使代码难以测试、难以合并，也难以为新模型复用。这里真正困难的，不是“是否存在统一抽象”，而是抽象该把什么纳入、把什么留在边界外。若抽象过薄，平台差异会反复溢出到 worker、调度器、采样器和 API 层；若抽象过厚，又容易把短期平台特例固化成长期接口负担。较健康的工程策略，通常不是试图用单一层吞掉所有差异，而是把平台能力差异、启动期环境治理和运行期异常护栏分层处理：平台层负责设备能力与后端选择，运行时层负责降级、回退和状态一致性，环境治理层负责依赖、驱动和工具链的前置修复。这种分层的价值不只是“代码更整洁”，更重要的是能把不同类型的问题压回各自的责任边界，使系统在面对新硬件或新模型时不至于整条执行链一起失稳。
