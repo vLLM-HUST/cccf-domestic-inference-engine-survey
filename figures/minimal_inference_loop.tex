@@ -1,0 +1,20 @@
+\begin{tikzpicture}[
+    node distance=8mm and 10mm,
+    block/.style={draw=black!75, line width=0.8pt, rounded corners=2.2pt, minimum width=25mm, minimum height=10mm, align=center, font=\small, inner sep=4pt},
+    note/.style={font=\scriptsize, align=center, fill=white, inner sep=1pt, text=black!80},
+    flow/.style={-{Latex[length=2mm]}, semithick, draw=black!75}
+]
+\node[block, fill=gray!8] (input) {输入文本\\tokenizer};
+\node[block, fill=blue!9, right=of input] (embed) {embedding\\位置编码};
+\node[block, fill=green!10, right=of embed] (prefill) {Prefill\\建立 KV Cache};
+\node[block, fill=green!10, below=12mm of prefill] (decode) {Decode\\增量生成};
+\node[block, fill=gray!8, right=of decode] (output) {输出 token\\流式返回};
+
+\draw[flow] (input) -- (embed);
+\draw[flow] (embed) -- (prefill);
+\draw[flow] (prefill) -- (decode);
+\draw[flow] (decode) -- (output);
+\draw[flow, dashed] (prefill.south west) -- ++(-8mm,-6mm) node[note, left, text width=2.8cm] {首 token 时延} -| (decode.west);
+
+\node[note, below=8mm of decode, text width=5.2cm] {稳定生成速度主要受 decode 主路径、缓存组织和带宽利用影响。};
+\end{tikzpicture}

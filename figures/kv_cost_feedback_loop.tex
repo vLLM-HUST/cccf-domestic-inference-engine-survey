@@ -1,0 +1,15 @@
+\begin{tikzpicture}[
+    node distance=12mm and 16mm,
+    block/.style={draw=black!75, line width=0.8pt, rounded corners=2.2pt, minimum width=28mm, minimum height=10mm, align=center, font=\small, inner sep=4pt},
+    flow/.style={-{Latex[length=2mm]}, semithick, draw=black!75}
+]
+\node[block, fill=green!10] (cache) {KV Cache\\块化 / 前缀复用};
+\node[block, fill=orange!12, right=of cache] (compress) {压缩路径\\量化 / 稀疏 / 低比特};
+\node[block, fill=blue!9, below=of compress] (cost) {成本结果\\显存 / 带宽 / 单位 token};
+\node[block, fill=gray!8, left=of cost] (quality) {服务质量\\吞吐 / 时延 / 精度};
+
+\draw[flow] (cache) -- (compress);
+\draw[flow] (compress) -- (cost);
+\draw[flow] (cost) -- (quality);
+\draw[flow] (quality) -- (cache);
+\end{tikzpicture}

@@ -1,0 +1,18 @@
+\begin{tikzpicture}[
+    node distance=9mm and 12mm,
+    block/.style={draw=black!75, line width=0.8pt, rounded corners=2.2pt, minimum width=27mm, minimum height=10.5mm, align=center, font=\small, inner sep=4pt},
+    flow/.style={-{Latex[length=2mm]}, semithick, draw=black!75},
+    note/.style={font=\scriptsize, align=center, fill=white, inner sep=1pt, text=black!80}
+]
+\node[block, fill=blue!9] (sched) {调度与整形\\bucket / SLO};
+\node[block, fill=gray!8, left=of sched] (request) {请求进入\\服务接口};
+\node[block, fill=green!10, right=of sched] (exec) {执行与返回\\流式输出};
+\node[block, fill=orange!12, below=12mm of sched] (ops) {观测与运维\\日志 / 监控 / 回滚};
+
+\draw[flow] (request) -- (sched);
+\draw[flow] (sched) -- (exec);
+\draw[flow, dashed] (exec.south west) -- (ops.east);
+\draw[flow, dashed] (ops.west) -- ++(-12mm,0) |- (request.south);
+
+\node[note, below=8mm of ops, text width=5.8cm] {服务层真正的闭环，不只包括调度与返回，也包括异常回退、监控和升级控制。};
+\end{tikzpicture}
