@@ -1,15 +1,15 @@
 \begin{tikzpicture}[
-    node distance=15mm and 18mm,
-    block/.style={draw=black!75, line width=0.8pt, rounded corners=2.2pt, minimum width=30mm, minimum height=10mm, align=center, font=\small, inner sep=4pt},
-    centerblock/.style={draw=black!75, line width=0.8pt, rounded corners=3pt, minimum width=38mm, minimum height=12mm, align=center, font=\small\bfseries, inner sep=5pt},
-    note/.style={font=\scriptsize, align=center, fill=white, inner sep=1.2pt, text=black!80},
+    node distance=18mm and 24mm,
+    block/.style={draw=black!75, line width=0.8pt, rounded corners=2.2pt, minimum width=31mm, minimum height=10mm, align=center, font=\small, inner sep=4pt},
+    centerblock/.style={draw=black!75, line width=0.8pt, rounded corners=3pt, minimum width=40mm, minimum height=12mm, align=center, font=\small\bfseries, inner sep=5pt},
+    note/.style={font=\footnotesize, align=center, fill=white, inner sep=1.2pt, text=black!80},
     flow/.style={-{Latex[length=2.2mm]}, semithick, draw=black!75}
 ]
 \node[centerblock, fill=gray!8] (goal) {可持续的国产算力\\推理系统底座};
 
-\node[block, fill=blue!9, above left=18mm and 24mm of goal] (plugin) {后端插件化\\平台抽象/注册表/可合并优化};
-\node[block, fill=green!10, above right=18mm and 24mm of goal] (runtime) {资源管理与调度\\SLO/迁移/KV Cache/阶段解耦};
-\node[block, fill=orange!12, below left=18mm and 24mm of goal] (eval) {统一评测与观测\\近真实负载/成本/稳定性指标};
+\node[block, fill=blue!9, above left=20mm and 28mm of goal] (plugin) {后端插件化\\平台抽象/注册/可合并优化};
+\node[block, fill=green!10, above right=20mm and 28mm of goal] (runtime) {资源管理与调度\\SLO/迁移/KV Cache/阶段解耦};
+\node[block, fill=orange!12, below left=20mm and 28mm of goal] (eval) {统一评测与观测\\近真实负载/成本/稳定性};
 \node[block, fill=red!8, below right=18mm and 24mm of goal] (model) {模型结构持续演进\\MoE/MLA/多模态/语音交互};
 
 \draw[flow] (plugin.south east) -- (goal.north west);
@@ -17,6 +17,6 @@
 \draw[flow] (eval.north east) -- (goal.south west);
 \draw[flow] (model.north west) -- (goal.south east);
 
-\node[note, text width=7.0cm, above=5mm of goal] {未来竞争不再是单一热点优化，而是多条系统能力线的收敛。};
-\node[note, text width=7.0cm, below=5mm of goal] {平台抽象、运行时组织、统一评测与模型演进需要同步推进。};
+\node[note, text width=6.2cm, above=6mm of goal] {未来竞争将从单点热点优化转向系统能力收敛。};
+\node[note, text width=6.4cm, below=6mm of goal] {平台抽象、运行时、评测与模型演进需要同步推进。};
 \end{tikzpicture}
