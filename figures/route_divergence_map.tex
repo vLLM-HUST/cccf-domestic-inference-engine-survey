@@ -1,33 +1,78 @@
+% Purpose: classify domestic-computing inference routes by where each route
+% places system complexity, without turning the figure into a project list.
 \begin{tikzpicture}[
-    node distance=8mm and 11mm,
-    block/.style={draw=black!75, line width=0.8pt, rounded corners=2.2pt, minimum width=31mm, minimum height=10mm, align=center, font=\small, inner sep=4pt},
-    note/.style={draw=black!70, line width=0.8pt, rounded corners=2.2pt, minimum width=31mm, align=center, font=\footnotesize, inner sep=3pt},
-    captionnote/.style={font=\footnotesize, align=center, fill=white, inner sep=1.2pt, text=black!80},
-    flow/.style={-{Latex[length=2.2mm]}, semithick, draw=black!75}
+    font=\small,
+    node distance=5.5mm and 9mm,
+    source/.style={draw=black!75, line width=0.75pt, rounded corners=2pt,
+        align=center, fill=gray!8, inner sep=4pt, text width=31mm},
+    route/.style={draw=black!75, line width=0.75pt, rounded corners=2pt,
+        align=left, fill=blue!6, inner sep=4pt, text width=45mm},
+    backend/.style={draw=black!75, line width=0.75pt, rounded corners=2pt,
+        align=left, fill=orange!9, inner sep=4pt, text width=34mm},
+    challenge/.style={draw=black!65, line width=0.7pt, rounded corners=2pt,
+        align=center, fill=gray!6, inner sep=4pt, text width=116mm},
+    tag/.style={font=\footnotesize\bfseries, text=black!78},
+    arrow/.style={-{Stealth[length=2.2mm]}, line width=0.7pt, draw=black!70},
+    weakarrow/.style={-{Stealth[length=2.0mm]}, line width=0.6pt, draw=black!55, dashed},
+    group/.style={draw=black!45, line width=0.55pt, rounded corners=3pt, inner sep=5pt}
 ]
-\node[block, fill=gray!8, minimum width=44mm] (goal) {国产推理引擎路线选择};
-\node[captionnote, text width=6.4cm, above=4mm of goal] {核心张力：生态兼容性、平台特化深度、交付稳定性};
 
-\node[block, fill=blue!9, below left=15mm and 31mm of goal] (upstream) {开源主干后端适配\\vLLM / SGLang / vLLM-Ascend};
-\node[block, fill=orange!12, below=14mm of goal] (hybrid) {混合式架构\\vLLM-HUST\\上层兼容 + 热点特化};
-\node[block, fill=green!10, below right=15mm and 31mm of goal] (integrated) {一体化方案\\MindIE / 编译器 / 运行时协同};
+\node[source] (upstream) {国际主流 serving 抽象\\vLLM / SGLang\\OpenAI API / KV Cache};
 
-\node[note, fill=blue!5, below=7mm of upstream] (u1) {优势：生态吸收快\\模型跟进快};
-\node[note, fill=red!5, below=7mm of u1] (u2) {代价：patch 累积\\边界易失稳};
+\node[route, right=12mm of upstream, yshift=23mm] (plugin) {
+    \textbf{插件式后端适配}\\
+    vLLM-Ascend / vLLM-MLU\\
+    SGLang Ascend\\
+    \textit{复杂度：plugin backend}
+};
+\node[route, below=of plugin] (platform) {
+    \textbf{平台一体化推理栈}\\
+    MindIE\\
+    \textit{复杂度：runtime / 交付链路}
+};
+\node[route, below=of platform] (native) {
+    \textbf{国产独立/原生引擎}\\
+    Chitu / xLLM\\
+    \textit{复杂度：service state machine}
+};
+\node[route, below=of native] (toolchain) {
+    \textbf{工具链型多硬件部署}\\
+    FastDeploy / LMDeploy\\
+    \textit{复杂度：toolchain}
+};
+\node[route, below=of toolchain] (compiler) {
+    \textbf{跨架构编译/运行时抽象}\\
+    中国电信 Triton 统一框架\\
+    \textit{复杂度：compiler/runtime abstraction}
+};
 
-\node[note, fill=orange!6, below=7mm of hybrid] (h1) {优势：兼顾兼容性\\与平台优化};
-\node[note, fill=red!5, below=7mm of h1] (h2) {代价：体系复杂\\组织门槛高};
+\node[backend, right=13mm of native] (hardware) {
+    \textbf{国产硬件与基础软件}\\
+    Ascend NPU / Cambricon MLU\\
+    XPU / DCU / GCU / MUSA\\
+    SDK / runtime / driver / compiler
+};
 
-\node[note, fill=green!5, below=7mm of integrated] (i1) {优势：交付稳定\\平台约束强};
-\node[note, fill=red!5, below=7mm of i1] (i2) {代价：生态兼容慢\\上游响应慢};
+\node[challenge, below=8mm of compiler, xshift=-14mm] (challenge) {
+    共同挑战：SDK/runtime 版本矩阵 \quad feature parity \quad benchmark 可比性 \quad 生态碎片化
+};
 
-\draw[flow] (goal.south west) -- (upstream.north);
-\draw[flow] (goal.south) -- (hybrid.north);
-\draw[flow] (goal.south east) -- (integrated.north);
-\draw[flow] (upstream) -- (u1);
-\draw[flow] (u1) -- (u2);
-\draw[flow] (hybrid) -- (h1);
-\draw[flow] (h1) -- (h2);
-\draw[flow] (integrated) -- (i1);
-\draw[flow] (i1) -- (i2);
+\node[group, fit=(plugin)(platform)(native)(toolchain)(compiler),
+    label={[tag, fill=white, inner sep=1pt]above:路线分类：复杂度落点}] {};
+
+\draw[arrow] (upstream.east) -- (plugin.west);
+\draw[arrow] (upstream.east) -- (platform.west);
+\draw[arrow] (upstream.east) -- (native.west);
+\draw[arrow] (upstream.east) -- (toolchain.west);
+\draw[arrow] (upstream.east) -- (compiler.west);
+
+\draw[arrow] (plugin.east) -- (hardware.west);
+\draw[arrow] (platform.east) -- (hardware.west);
+\draw[arrow] (native.east) -- (hardware.west);
+\draw[arrow] (toolchain.east) -- (hardware.west);
+\draw[arrow] (compiler.east) -- (hardware.west);
+
+\draw[weakarrow] (hardware.south) |- (challenge.east);
+\draw[weakarrow] (compiler.south) -- (challenge.north);
+
 \end{tikzpicture}
