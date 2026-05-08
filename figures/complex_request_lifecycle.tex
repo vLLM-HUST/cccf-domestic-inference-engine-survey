@@ -34,6 +34,9 @@
 \draw[flow] (prefill) -- (decode);
 \draw[flow] (decode.south) -- ++(0,-7mm) -| (verify.north);
 \draw[flow] (verify) -- (finish);
+\draw[flow, dashed] (prefill.west) -- (cache.east);
+\draw[flow, dashed] (decode.east) -- (tool.west);
+\draw[flow, dashed] (tool.east) -- ++(6mm,0) |- ([yshift=6mm]normalize.north) -- (normalize.north);
 
 \draw[stateflow] (prefill.south) -- (cache.north);
 \draw[stateflow] (decode.west) -- ++(-5mm,0) |- (cache.north east);
