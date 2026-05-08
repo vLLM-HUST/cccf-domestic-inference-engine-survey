@@ -1,0 +1,9 @@
+\begin{tikzpicture}[
+    node distance=4mm,
+    layer/.style={draw=black!75, line width=0.8pt, rounded corners=2.2pt, minimum width=56mm, minimum height=9mm, align=center, font=\small, inner sep=4pt}
+]
+\node[layer, fill=gray!8] (top) {统一接口语义与版本留痕};
+\node[layer, fill=blue!9, below=of top] (mid1) {统一指标口径\\TTFT / TPOT / 吞吐 / 尾时延};
+\node[layer, fill=green!10, below=of mid1] (mid2) {统一状态描述\\命中率 / 驻留 / 迁移 / 回退};
+\node[layer, fill=orange!12, below=of mid2] (bot) {统一观测证据链\\trace / log / metrics / 回归记录};
+\end{tikzpicture}

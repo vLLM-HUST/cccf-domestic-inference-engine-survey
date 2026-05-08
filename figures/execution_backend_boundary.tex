@@ -1,0 +1,18 @@
+\begin{tikzpicture}[
+    node distance=10mm and 12mm,
+    block/.style={draw=black!75, line width=0.8pt, rounded corners=2.2pt, minimum width=30mm, minimum height=10.5mm, align=center, font=\small, inner sep=4pt},
+    flow/.style={-{Latex[length=2mm]}, semithick, draw=black!75},
+    note/.style={font=\scriptsize, align=center, fill=white, inner sep=1pt, text=black!80}
+]
+\node[block, fill=blue!9] (scheduler) {执行编排\\batch / 阶段切换};
+\node[block, fill=green!10, right=of scheduler] (runner) {model runner\\worker / 并行策略};
+\node[block, fill=orange!12, below=12mm of runner] (backend) {后端能力\\图模式 / kernel / 回退};
+\node[block, fill=gray!8, right=of backend] (device) {设备与通信\\NPU / GPU / 驱动};
+
+\draw[flow] (scheduler) -- (runner);
+\draw[flow] (runner) -- (backend);
+\draw[flow] (backend) -- (device);
+\draw[flow, dashed] (device.north) |- (runner.east);
+
+\node[note, below=8mm of backend, text width=6.2cm] {平台差异更适合被封装在后端能力边界内，而不是持续回流到共享调度主链。};
+\end{tikzpicture}
