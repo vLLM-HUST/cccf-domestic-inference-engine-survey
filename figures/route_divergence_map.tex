@@ -1,33 +1,39 @@
+\definecolor{cBlue}{HTML}{E6F0FA}
+\definecolor{cGreen}{HTML}{E9F5EE}
+\definecolor{cOrange}{HTML}{FCEFE3}
+\definecolor{cGray}{HTML}{F2F3F5}
 \begin{tikzpicture}[
-    node distance=6mm and 8mm,
-    block/.style={draw=black!75, line width=0.8pt, rounded corners=2.2pt, minimum width=29mm, minimum height=9.5mm, align=center, font=\small, inner sep=4pt},
-    note/.style={draw=black!70, line width=0.8pt, rounded corners=2.2pt, minimum width=29mm, align=center, font=\scriptsize, inner sep=3pt},
-    captionnote/.style={font=\scriptsize, align=center, fill=white, inner sep=1.2pt, text=black!80},
-    flow/.style={-{Latex[length=2.2mm]}, semithick, draw=black!75}
+    node distance=7mm and 10mm,
+    scale=1.12,
+    transform shape,
+    block/.style={draw=black!70, line width=0.85pt, rounded corners=2.4pt, minimum width=33mm, minimum height=11mm, align=center, font=\normalsize\sffamily, inner sep=4.5pt},
+    note/.style={draw=black!65, line width=0.8pt, rounded corners=2.2pt, minimum width=28mm, align=center, font=\scriptsize\sffamily, inner sep=3.2pt},
+    captionnote/.style={font=\small\sffamily, align=center, fill=white, inner sep=1.6pt, text=black!75},
+    flow/.style={-{Latex[length=3.0mm,width=2.0mm]}, line width=0.9pt, draw=black!75}
 ]
-\node[block, fill=gray!8, minimum width=42mm] (goal) {国产推理引擎路线选择};
-\node[captionnote, text width=6.8cm, above=3mm of goal] {核心张力：生态兼容性、平台特化深度、交付稳定性};
+\node[block, fill=cGray, minimum width=48mm] (goal) {\textbf{国产推理引擎路线选择}};
+\node[captionnote, text width=7.6cm, above=3mm of goal] {核心张力：生态兼容性、平台特化深度、交付稳定性};
 
-\node[block, fill=blue!9, below left=14mm and 27mm of goal] (upstream) {开源主干后端适配\\vLLM / SGLang / vLLM-Ascend};
-\node[block, fill=orange!12, below=12mm of goal] (hybrid) {混合式架构\\vLLM-HUST\\上层兼容 + 底层热点特化};
-\node[block, fill=green!10, below right=14mm and 27mm of goal] (integrated) {一体化方案\\MindIE / 编译器 / 运行时协同};
+\node[block, fill=cBlue, below left=16mm and 30mm of goal] (upstream) {\textbf{开源主干后端适配}\\vLLM / SGLang / vLLM-Ascend};
+\node[block, fill=cOrange, below=12mm of goal] (hybrid) {\textbf{混合式架构}\\vLLM-HUST\\上层兼容 + 底层热点特化};
+\node[block, fill=cGreen, below right=16mm and 30mm of goal] (integrated) {\textbf{一体化方案}\\MindIE / 编译器 / 运行时协同};
 
-\node[note, fill=blue!5, below=6mm of upstream] (u1) {优势：生态吸收快\\模型跟进快};
-\node[note, fill=red!5, below=6mm of u1] (u2) {代价：patch 累积\\抽象边界易失稳};
+\node[note, fill=cBlue, below=7mm of upstream, xshift=-16mm] (u1) {\textbf{优势}：生态吸收快\\模型跟进快};
+\node[note, fill=cBlue, below=7mm of upstream, xshift=16mm] (u2) {\textbf{代价}：patch 累积\\抽象边界易失稳};
 
-\node[note, fill=orange!6, below=6mm of hybrid] (h1) {优势：兼顾兼容性\\与平台优化};
-\node[note, fill=red!5, below=6mm of h1] (h2) {代价：体系复杂\\组织门槛高};
+\node[note, fill=cOrange, below=7mm of hybrid, xshift=-16mm] (h1) {\textbf{优势}：兼顾兼容性\\与平台优化};
+\node[note, fill=cOrange, below=7mm of hybrid, xshift=16mm] (h2) {\textbf{代价}：体系复杂\\组织门槛高};
 
-\node[note, fill=green!5, below=6mm of integrated] (i1) {优势：交付稳定\\平台约束强};
-\node[note, fill=red!5, below=6mm of i1] (i2) {代价：生态兼容慢\\上游响应较慢};
+\node[note, fill=cGreen, below=7mm of integrated, xshift=-16mm] (i1) {\textbf{优势}：交付稳定\\平台约束强};
+\node[note, fill=cGreen, below=7mm of integrated, xshift=16mm] (i2) {\textbf{代价}：生态兼容慢\\上游响应较慢};
 
 \draw[flow] (goal.south west) -- (upstream.north);
 \draw[flow] (goal.south) -- (hybrid.north);
 \draw[flow] (goal.south east) -- (integrated.north);
 \draw[flow] (upstream) -- (u1);
-\draw[flow] (u1) -- (u2);
+\draw[flow] (upstream) -- (u2);
 \draw[flow] (hybrid) -- (h1);
-\draw[flow] (h1) -- (h2);
+\draw[flow] (hybrid) -- (h2);
 \draw[flow] (integrated) -- (i1);
-\draw[flow] (i1) -- (i2);
+\draw[flow] (integrated) -- (i2);
 \end{tikzpicture}
