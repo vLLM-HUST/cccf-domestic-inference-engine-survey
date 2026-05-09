@@ -1,50 +1,40 @@
-% Purpose: redraw the original system-design logic with clearer spacing and routing.
+\definecolor{cBlue}{HTML}{E6F0FA}
+\definecolor{cGreen}{HTML}{E9F5EE}
+\definecolor{cOrange}{HTML}{FCEFE3}
+\definecolor{cGray}{HTML}{F2F3F5}
 \begin{tikzpicture}[
-    font=\small,
-    node distance=12mm and 8mm,
-    block/.style={draw=black!78, line width=0.8pt, rounded corners=2pt,
-        align=center, minimum height=10mm, inner sep=3pt, text width=30mm},
-    core/.style={block, fill=green!8},
-    platform/.style={block, fill=orange!10},
-    note/.style={draw=black!45, line width=0.55pt, rounded corners=2pt,
-        align=center, font=\footnotesize, inner sep=3pt, fill=gray!5, text width=42mm},
-    tag/.style={font=\footnotesize\bfseries, text=black!75, align=center},
-    flow/.style={-{Stealth[length=2.6mm]}, line width=0.95pt, draw=black!82,
-        shorten >=2pt, shorten <=2pt},
-    stateflow/.style={-{Stealth[length=2.4mm]}, line width=0.9pt, draw=black!70,
-        dash pattern=on 3pt off 2pt, shorten >=2pt, shorten <=2pt}
+    node distance=9mm and 12mm,
+    scale=1.12,
+    transform shape,
+    block/.style={draw=black!70, line width=0.85pt, rounded corners=2.4pt, align=center, minimum height=11.5mm, inner sep=4.5pt, font=\normalsize\sffamily},
+    group/.style={draw=black!55, line width=0.8pt, rounded corners=3pt, inner sep=7pt},
+    note/.style={font=\small\sffamily, align=center, fill=white, inner sep=1.8pt, text=black!75},
+    flow/.style={-{Latex[length=3.2mm,width=2.1mm]}, line width=0.9pt, draw=black!75}
 ]
+\node[block, fill=cGray, minimum width=3.3cm] (ingress) {\textbf{业务请求}\\文本/长上下文/多模态/工具调用};
+\node[block, fill=cBlue, minimum width=3.1cm, right=of ingress] (service) {\textbf{服务入口与接口层}\\OpenAI 兼容/鉴权/监控};
+\node[block, fill=cBlue, minimum width=3.1cm, right=of service] (scheduler) {\textbf{调度与运行时层}\\批处理组织/SLO/bucket/回退};
 
-\node[block, fill=gray!8] (ingress) {业务请求\\文本/长上下文/多模态};
-\node[block, fill=blue!8, right=of ingress] (service) {服务入口与接口层\\鉴权 / OpenAI 兼容 / 监控};
-\node[block, fill=blue!8, right=of service] (scheduler) {调度与运行时层\\batch 组织 / SLO / 回退};
-\node[tag, above=4mm of service] {服务入口};
-
-\node[core, below=16mm of service] (execute) {执行层\\prefill / decode / 并行};
-\node[core, right=of execute] (cache) {KV Cache 与状态\\前缀复用 / 迁移 / 驱逐};
-\node[core, right=of cache] (backend) {后端接口层\\图模式 / 算子 / 能力门控};
-\node[tag, above=4mm of cache] {运行时核心};
-
-\node[platform, right=13mm of backend] (compiler) {编译器与运行时\\CANN / MindSpore / 插件栈};
-\node[platform, below=11mm of compiler] (device) {国产硬件平台\\NPU / GPU / 驱动 / 通信};
-\node[tag, above=4mm of compiler] {平台边界};
-
-\node[note, below=10mm of execute] (note1) {多阶段请求会迅速放大负载异质性};
-\node[note, below=10mm of device] (note2) {平台差异主要暴露在编译、后端与回退边界};
+\node[block, fill=cGreen, minimum width=2.8cm, below=12mm of service, xshift=-8mm] (execute) {\textbf{执行层}\\prefill/decode/并行策略};
+\node[block, fill=cGreen, minimum width=2.8cm, right=of execute] (cache) {\textbf{KV Cache 与状态层}\\前缀复用/迁移/驱逐};
+\node[block, fill=cGreen, minimum width=2.8cm, right=of cache] (backend) {\textbf{后端接口层}\\图模式/算子/能力门控};
+\node[group, fit=(execute)(cache)(backend), label={[font=\small\sffamily\bfseries, fill=white, inner sep=1.5pt]below:运行时核心}] (runtime) {};
+\node[block, fill=cOrange, minimum width=3.0cm, below=12mm of cache, xshift=-8mm] (compiler) {\textbf{编译器与运行时}\\CANN/MindSpore/插件栈};
+\node[block, fill=cOrange, minimum width=2.7cm, below=10mm of compiler] (device) {\textbf{国产硬件平台}\\NPU/GPU/驱动/通信};
+\node[group, fit=(compiler)(device), label={[font=\small\sffamily\bfseries, fill=white, inner sep=1.5pt]below:平台栈}] (platform) {};
 
 \draw[flow] (ingress) -- (service);
 \draw[flow] (service) -- (scheduler);
-
-\draw[flow] (scheduler.south) -- ++(0,-7mm) -| (execute.north);
-\draw[flow] (scheduler.south) -- (cache.north);
-\draw[flow] (scheduler.south) -- ++(0,-7mm) -| (backend.north);
-
+\draw[flow] (scheduler) -- (execute);
+\draw[flow] (scheduler) -- (cache);
+\draw[flow] (scheduler) -- (backend);
 \draw[flow] (execute) -- (cache);
 \draw[flow] (cache) -- (backend);
 \draw[flow] (backend) -- (compiler);
 \draw[flow] (compiler) -- (device);
-\draw[flow] (device.west) -- ++(-9mm,0) |- (backend.south);
+\draw[flow] (device.east) -| ([xshift=12mm]backend.east) -- (backend.east);
+\draw[flow, dashed, line width=0.8pt, draw=black!65] (cache.south) -- ++(0,-8mm) -| ([xshift=-10mm]execute.west) -- ++(0,12mm) -| ([yshift=-6mm]service.south) -- (service.south);
 
-\draw[stateflow] (cache.north west) -- ++(-7mm,7mm) -| (service.south);
-
+\node[note, text width=4.0cm, right=10mm of scheduler] {真实压力来自多阶段请求异质性};
+\node[note, text width=4.0cm, right=10mm of device] {平台差异集中暴露在编译、算子与回退边界};
 \end{tikzpicture}

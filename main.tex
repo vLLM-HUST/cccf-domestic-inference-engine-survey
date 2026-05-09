@@ -22,13 +22,14 @@
 \hypersetup{colorlinks=true, linkcolor=black, citecolor=black, urlcolor=blue}
 \setlength{\parindent}{2em}
 \setlength{\parskip}{0pt}
-\setlength{\emergencystretch}{2em}
+\setlength{\emergencystretch}{3em}
 \setlist{nosep}
 \captionsetup{font=small, labelfont=bf}
 \renewcommand{\bibname}{参考文献}
 \renewcommand{\refname}{参考文献}
 \renewcommand{\arraystretch}{1.15}
 
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 \usetikzlibrary{arrows.meta,fit,positioning,shapes.geometric}
 \newcounter{algorithm}
@@ -49,12 +50,12 @@
 
 \newcommand{\papertitlecn}{国产算力平台大模型推理引擎综述}
 \newcommand{\papertitleen}{A Survey of Large-Model Inference Engines on Domestic Computing Platforms}
-\newcommand{\authorscn}{张书豪$^{1}$，廖小飞$^{1}$，金海$^{1}$}
-\newcommand{\authorsen}{Shuhao Zhang$^{1}$, Xiaofei Liao$^{1}$, Hai Jin$^{1}$}
+\newcommand{\authorscn}{张书豪$^{1}$，刘世峰$^{1}$，杜雨枫$^{1}$，廖小飞$^{1}$，金海$^{1}$}
+\newcommand{\authorsen}{Shuhao Zhang$^{1}$, Shifeng Liu$^{1}$, Yufeng Du$^{1}$, Xiaofei Liao$^{1}$, Hai Jin$^{1}$}
 \newcommand{\affiliationscn}{$^{1}$华中科技大学计算机科学与技术学院，大数据技术与系统国家地方联合工程研究中心，服务计算技术与系统教育部重点实验室，集群与网格计算湖北省重点实验室，武汉 430074}
 \newcommand{\affiliationsen}{$^{1}$School of Computer Science and Technology, Huazhong University of Science and Technology, National Engineering Research Center for Big Data Technology and System, Services Computing Technology and System Lab, Cluster and Grid Computing Lab, Wuhan 430074, China}
-\newcommand{\contactline}{通信作者：张书豪，E-mail：shuhao\_zhang@hust.edu.cn}
-\newcommand{\contactlineen}{Corresponding author: Shuhao Zhang, E-mail: shuhao\_zhang@hust.edu.cn}
+\newcommand{\contactline}{通信作者：廖小飞，E-mail：xfliao@hust.edu.cn}
+\newcommand{\contactlineen}{Corresponding author: Xiaofei Liao, E-mail: xfliao@hust.edu.cn}
 
 \newcommand{\makecccfstyletitle}{
 	\begin{center}
