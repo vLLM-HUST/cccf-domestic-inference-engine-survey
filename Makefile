@@ -1,10 +1,18 @@
 PDF_OUT=build/main.pdf
 ifeq ($(OS),Windows_NT)
-LATEXMK:=$(firstword $(shell where latexmk 2>NUL))
-TECTONIC:=$(firstword $(shell where tectonic 2>NUL))
+ifneq ($(strip $(shell where latexmk 2>NUL)),)
+LATEXMK:=latexmk
+endif
+ifneq ($(strip $(shell where tectonic 2>NUL)),)
+TECTONIC:=tectonic
+endif
 else
-LATEXMK:=$(shell command -v latexmk 2>/dev/null)
-TECTONIC:=$(shell command -v tectonic 2>/dev/null)
+ifneq ($(strip $(shell command -v latexmk 2>/dev/null)),)
+LATEXMK:=latexmk
+endif
+ifneq ($(strip $(shell command -v tectonic 2>/dev/null)),)
+TECTONIC:=tectonic
+endif
 endif
 TEX_CLEAN_FILES=$(PDF_OUT) build/main.aux build/main.bbl build/main.bcf build/main.blg build/main.fdb_latexmk build/main.fls build/main.log build/main.out build/main.run.xml build/main.synctex.gz build/main.toc build/main.xdv
 
