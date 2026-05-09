@@ -1,18 +1,64 @@
 \begin{tikzpicture}[
-    node distance=9mm and 12mm,
-    block/.style={draw=black!75, line width=0.8pt, rounded corners=2.2pt, minimum width=27mm, minimum height=10.5mm, align=center, font=\small, inner sep=4pt},
-    flow/.style={-{Latex[length=2mm]}, semithick, draw=black!75},
-    note/.style={font=\scriptsize, align=center, fill=white, inner sep=1pt, text=black!80}
+    node distance=16mm and 18mm,
+    >=Stealth,
+    mainblock/.style={
+        draw=black!85, 
+        line width=1pt, 
+        rounded corners=3pt, 
+        minimum width=38mm, 
+        minimum height=14mm, 
+        align=center, 
+        fill=gray!8, 
+        inner sep=4pt
+    },
+    opsblock/.style={
+        mainblock,
+        fill=white,
+        draw=black!70,
+        line width=0.75pt,
+        dashed
+    },
+    flow/.style={->, line width=1pt, draw=black!90},
+    feedback/.style={->, line width=0.75pt, dashed, draw=black!70},
+    boundary/.style={
+        draw=black!40, 
+        line width=0.5pt, 
+        dashed, 
+        rounded corners=4pt, 
+        fill=gray!2, 
+        inner sep=18pt
+    },
+    edgelabel/.style={
+        font=\scriptsize\sffamily, 
+        text=black!75, 
+        fill=gray!2, 
+        inner sep=2pt
+    }
 ]
-\node[block, fill=blue!9] (sched) {调度与整形\\bucket / SLO};
-\node[block, fill=gray!8, left=of sched] (request) {请求进入\\服务接口};
-\node[block, fill=green!10, right=of sched] (exec) {执行与返回\\流式输出};
-\node[block, fill=orange!12, below=12mm of sched] (ops) {观测与运维\\日志 / 监控 / 回滚};
+
+\node[mainblock] (sched) {\textbf{调度与流量整形}\\[1.5mm]\footnotesize 令牌桶 / SLO};
+\node[mainblock, left=of sched] (request) {\textbf{请求进入}\\[1.5mm]\footnotesize 服务接口};
+\node[mainblock, right=of sched] (exec) {\textbf{执行与返回}\\[1.5mm]\footnotesize 流式输出};
+
+\node[opsblock, below=18mm of sched] (ops) {\textbf{观测与运维}\\[1.5mm]\footnotesize 日志采集 $\vert$ 性能监控 $\vert$ 异常回退};
+
+\path (exec.east) ++(28mm, 0) coordinate (right_padding);
+
+\begin{scope}[on background layer]
+    \node[boundary, fit=(request) (exec) (ops) (sched) (right_padding)] (system_boundary) {};
+\end{scope}
+
+\node[draw=black!40, line width=0.5pt, fill=white, rounded corners=2pt, inner sep=4pt, 
+      anchor=south east, xshift=-4mm, yshift=4mm] at (system_boundary.south east) {
+    \begin{tabular}{@{}cl@{}}
+    \tikz[baseline=-0.5ex]\draw[flow] (0,0) -- (0.4,0); & \scriptsize 主请求流 \\
+    \tikz[baseline=-0.5ex]\draw[feedback] (0,0) -- (0.4,0); & \scriptsize 运维反馈流
+    \end{tabular}
+};
 
 \draw[flow] (request) -- (sched);
 \draw[flow] (sched) -- (exec);
-\draw[flow, dashed] (exec.south west) -- (ops.east);
-\draw[flow, dashed] (ops.west) -- ++(-12mm,0) |- (request.south);
+\draw[feedback] (exec.south) |- node[pos=0.75, edgelabel, anchor=south] {监控数据采集} (ops.east);
+\draw[feedback] (ops.west) -| node[pos=0.25, edgelabel, anchor=south] {异常回退 / 配置调整} (request.south);
 
-\node[note, below=8mm of ops, text width=5.8cm] {服务层真正的闭环，不只包括调度与返回，也包括异常回退、监控和升级控制。};
 \end{tikzpicture}
