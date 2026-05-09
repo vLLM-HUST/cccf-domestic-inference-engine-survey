@@ -1,9 +1,27 @@
 \section{面向国产算力的大模型推理引擎生态}
 \label{sec:domestic-ecosystem}
 
+本章承接摘要提出的国产推理引擎分析框架，从产业生态与技术路线落地的维度，拆解国产算力场景下推理系统的完整技术栈构成。摘要将国产推理引擎的技术路线归纳为\textbf{开源主干后端适配、平台一体化方案与混合式架构}三类，本章的生态分层与技术实践恰好与三类路线形成一一映射：硬件厂商自研原生推理引擎对应平台一体化方案，主流开源推理框架的国产硬件适配对应开源主干后端适配路线，而中间层解耦与服务化平台则构成了混合式架构的核心载体。本章将从生态构成、代表实践、技术特征与演进趋势四个维度，系统梳理国产算力推理引擎的产业与技术现状，为后续的技术路径对比、核心技术拆解与架构演进分析提供生态层面的事实支撑\cite{caict2024whitepaper,zhang2024domestic}。
+
 面向国产算力的大模型推理引擎生态并不是单一软件系统，而是由硬件厂商基础软件、开源推理框架适配层、算子与编译栈、以及上层服务化平台共同构成。根据公开仓库与官方文档，可以将相关工作大致归纳为三类：第一类是硬件厂商自研推理引擎或原生后端，例如华为 Ascend MindIE、寒武纪 MagicMind、摩尔线程 MT-Transformer、天数智芯 IxRT/IGIE 等；第二类是围绕 vLLM、SGLang、LMDeploy、FastDeploy 等主流大模型推理框架的国产硬件适配；第三类是 DLinfer、Triton-Ascend、Xinference、GPUStack 等中间层或服务化平台，用于降低上层框架、算子库、图编译器与硬件运行时之间的耦合。
 
+三类生态实践对应了国产推理引擎研发的三条核心路径，其底层设计逻辑、技术取舍与目标场景存在本质差异，是本文后续进行技术选型对比的核心基础\cite{cui2025infer,sheng2024survey}：
+\begin{enumerate}[leftmargin=*, label=(\arabic*)]
+    \item \textbf{硬件厂商自研原生推理引擎（平台一体化路线）}：核心逻辑为“全栈协同优化”。向下深度绑定自研硬件架构与基础软件栈（如驱动、编译器、算子库），向上针对大模型推理的核心负载（如 Transformer 算子、KV Cache 管理、分布式通信）进行硬件原生定制优化。该路线能最大化释放硬件潜力，在 MoE 专家并行、低精度量化及内存层次优化等强硬件相关场景中优势显著；但其生态兼容性受限，通常仅支持特定硬件平台，开发者迁移成本较高。
+    \item \textbf{主流开源推理框架的国产硬件适配（开源主干适配路线）}：核心逻辑为“生态兼容优先”。基于全球主流开源主干（如 vLLM、SGLang、LMDeploy 等），通过后端适配、算子移植与插件扩展，将成熟的开源能力迁移至国产硬件。该路线可最大化复用开源社区成果，降低研发成本并保持特性同步，支持多模型与多场景；但其硬件特性释放受限于框架抽象层，难以实现极致优化，且面临持续适配与版本碎片化的风险。
+    \item \textbf{中间层解耦与服务化平台（混合式架构路线）}：核心逻辑为“解耦与标准化”。在推理框架与硬件后端之间构建统一抽象层，通过定义标准接口规范实现“一次开发、多硬件适配”。该路线有效解决了“N个框架$\times$M个硬件”的重复适配痛点，在异构算力集群与云原生规模化部署场景中具有显著优势；但其挑战在于统一抽象层的设计难度大，需在跨平台兼容性与硬件性能损耗之间寻求最优平衡。
+\end{enumerate}
+
 从公开生态看，vLLM 的硬件插件化正在成为国产算力适配的主要形态之一。vLLM-Ascend、vLLM-MLU、vLLM-MUSA、vLLM-MetaX、vLLM-Kunlun、vLLM-GCU 等项目均采用或参考 vLLM 的硬件插件机制，使厂商能够在尽量不侵入 vLLM 主干代码的情况下接入各自的 NPU、MLU、GPU、GCU 或 XPU 后端。这一路径的优势在于能够复用 vLLM 已有的连续批处理、KV Cache 管理、OpenAI 兼容服务接口、量化与投机解码等推理框架能力；挑战则在于底层算子、通信、图捕获、显存/片上内存管理、版本依赖和模型覆盖度仍需要各厂商持续适配。
+
+vLLM 的硬件插件化架构经历了从\textbf{侵入式修改（In-Tree）}到\textbf{非侵入式插件（Out-of-Tree, OOT）}的关键演进，其核心技术突破在于构建了分层的硬件抽象接口：vLLM 在核心调度层、KV Cache 管理层、算子层分别定义了标准化的硬件无关抽象接口，厂商仅需实现对应接口的硬件后端即可完成接入，解决了早期适配中“一版本一修改、上游更新即失效”的维护难题。
+
+当前，vLLM OOT 插件架构已成为国产算力适配的事实标准。国内主流硬件厂商均基于该架构完成了适配，同时行业内也在积极推进插件接口的标准化工作，如中国信通院牵头的《大模型推理引擎硬件适配接口规范》以及上海人工智能实验室 DeepLink 生态定义的统一算子接口\cite{kwon2024vllm,caict2025standard,shailab2024deeplink}。然而，当前插件化架构仍存在以下核心痛点：
+\begin{itemize}[leftmargin=*, label=\textbullet]
+    \item \textbf{标准化程度不足}：不同厂商的插件实现仍存在碎片化，难以实现跨硬件的插件复用。
+    \item \textbf{硬件特性释放不充分}：MoE 分布式通信、片上内存管理等强硬件相关特性，仍需侵入式修改主干代码才能实现最优性能。
+    \item \textbf{维护成本依然较高}：国产硬件适配代码大多维护在厂商独立仓库中，难以进入上游主干，面临长期同步成本。
+\end{itemize}
 
 华为 Ascend 生态是目前公开资料较为完整的代表。一方面，MindIE 作为面向 Ascend 的 AI 推理加速套件，覆盖大模型推理、服务化和 PyTorch 生态适配等能力；另一方面，vLLM-Ascend、SGLang-Kernel-NPU 和 Triton-Ascend 分别从推理框架插件、SGLang 算子库和 Triton 编译后端三个层面补充了开源生态。这说明国产算力推理引擎的竞争点已经从单一模型执行扩展到框架调度、KV Cache、MoE 通信、算子融合、编译优化和服务化接口等完整技术栈。
 
@@ -23,34 +41,65 @@
 \midrule
 \endhead
 
-华为 Ascend 生态 & Ascend NPU，Atlas 推理/训练服务器 & MindIE，vLLM-Ascend，SGLang-Kernel-NPU，Triton-Ascend & 覆盖厂商推理套件、vLLM 硬件插件、SGLang NPU kernel 与 Triton 后端。技术关注点包括 CANN/torch-npu 适配、服务化推理、MoE kernel、注意力算子、编译后端和硬件插件化接口\cite{huawei_mindie_2026,vllm_ascend_2026,sglang_kernel_npu_2026,triton_ascend_2026}。 \\
+华为 Ascend 生态 & Ascend NPU，Atlas 推理/训练服务器 & MindIE，vLLM-Ascend，SGLang-Kernel-NPU，Triton-Ascend & 覆盖厂商推理套件、vLLM 硬件插件、SGLang NPU kernel 与 Triton 后端。技术关注点包括 CANN/torch-npu 适配、服务化推理、MoE kernel、注意力算子、编译后端和硬件插件化接口\cite{huawei2024mindie,huawei2024vllm_ascend,huawei2025sglang_npu,huawei2024triton_ascend}。 \\
 
-SGLang 社区与 Ascend 适配 & Ascend NPU & SGLang-Kernel-NPU，DeepEP-Ascend & 面向 SGLang 的 Ascend NPU kernel 库，包含专家并行通信、attention、normalization、activation、LoRA 等推理关键算子，适合在综述中归入高性能 serving 框架的国产硬件 kernel 适配方向\cite{sglang_kernel_npu_2026}。 \\
+SGLang 社区与 Ascend 适配 & Ascend NPU & SGLang-Kernel-NPU，DeepEP-Ascend & 面向 SGLang 的 Ascend NPU kernel 库，包含专家并行通信、attention、normalization、activation、LoRA 等推理关键算子，适合在综述中归入高性能 serving 框架的国产硬件 kernel 适配方向\cite{huawei2025sglang_npu}。 \\
 
-上海人工智能实验室 DeepLink / OpenMMLab / InternLM 生态 & 多类国产加速器，包括 Ascend、Cambricon、MetaX 等 & DLinfer，LMDeploy & DLinfer 面向 LLM 推理框架和厂商算子/图引擎之间的解耦，LMDeploy 则提供 TurboMind 与 PyTorch Engine 两类推理引擎，并通过构建目标或适配层支持多种国产硬件\cite{deeplink_dlinfer_2026,lmdeploy_2026,lmdeploy_install_2026}。 \\
+上海人工智能实验室 DeepLink / OpenMMLab / InternLM 生态 & 多类国产加速器，包括 Ascend、Cambricon、MetaX 等 & DLinfer，LMDeploy & DLinfer 面向 LLM 推理框架 and 厂商算子/图引擎之间的解耦，LMDeploy 则提供 TurboMind 与 PyTorch Engine 两类推理引擎，并通过构建目标或适配层支持多种国产硬件\cite{shailab2024deeplink_repo,shailab2024dlinfer,shailab2025lmdeploy}。 \\
 
-百度飞桨 / 昆仑芯生态 & Kunlun XPU，同时覆盖多种国产硬件 & FastDeploy，vLLM-Kunlun & FastDeploy 面向大模型和多模态模型的生产级部署，支持 PD 分离、统一 KV Cache 传输、OpenAI/vLLM 兼容接口、量化和投机解码等能力；vLLM-Kunlun 则以 vLLM 硬件插件形式支持昆仑 XPU\cite{fastdeploy_2026,vllm_kunlun_2026}。 \\
+百度飞桨 / 昆仑芯生态 & Kunlun XPU，同时覆盖多种国产硬件 & FastDeploy，vLLM-Kunlun & FastDeploy 面向大模型和多模态模型的生产级部署，支持 PD 分离、统一 KV Cache 传输、OpenAI/vLLM 兼容接口、量化和投机解码等能力；vLLM-Kunlun 则以 vLLM 硬件插件形式支持昆仑 XPU\cite{baidu2025fastdeploy,kunlun2024vllm_kunlun}。 \\
 
-寒武纪 & Cambricon MLU & vLLM-MLU，MagicMind，CNServing & vLLM-MLU 基于 vLLM 插件系统在 MLU 硬件上提供大模型推理服务能力；MagicMind 是寒武纪面向 MLU 的推理加速引擎，负责模型转换、图优化、代码生成和部署\cite{cambricon_vllm_mlu_2026,cambricon_magicmind_2026}。 \\
+寒武纪 & Cambricon MLU & vLLM-MLU，MagicMind，CNServing & vLLM-MLU 基于 vLLM 插件系统在 MLU 硬件上提供大模型推理服务能力；MagicMind 是寒武纪面向 MLU 的推理加速引擎，负责模型转换、图优化、代码生成和部署\cite{cambricon2024vllm_mlu,cambricon2024magicmind}。 \\
 
-摩尔线程 & MUSA GPU & vLLM-MUSA，vLLM-MTT / MT-Transformer & vLLM-MUSA 强调与 vLLM 插件体系和 MUSA 软件栈集成；vLLM-MTT 则基于摩尔线程自研 MT-Transformer 后端，强调面向 Transformer 推理的底层算子融合和定制优化。二者体现了“通用兼容插件”和“高性能原生后端”两条路线\cite{moorethreads_vllm_musa_2026,moorethreads_vllm_mtt_2026}。 \\
+摩尔线程 & MUSA GPU & vLLM-MUSA，vLLM-MTT / MT-Transformer & vLLM-MUSA 强调与 vLLM 插件体系和 MUSA 软件栈集成；vLLM-MTT 则基于摩尔线程自研 MT-Transformer 后端，强调面向 Transformer 推理的底层算子融合和定制优化。二者体现了“通用兼容插件”和“高性能原生后端”两条路线\cite{moorethreads2024vllm_musa,moorethreads2024mt_transformer}。 \\
 
-沐曦集成电路 & MetaX GPU，MACA 软件栈 & vLLM-MetaX，LMDeploy/DLinfer 适配 & vLLM-MetaX 通过 MACA 类 CUDA 后端接入 vLLM，目标是在沐曦 GPU 上获得接近 CUDA 生态的开发体验；DLinfer 也将 MetaX 作为其支持的硬件后端之一\cite{metax_vllm_2026,deeplink_dlinfer_2026}。 \\
+沐曦集成电路 & MetaX GPU，MACA 软件栈 & vLLM-MetaX，LMDeploy/DLinfer 适配 & vLLM-MetaX 通过 MACA 类 CUDA 后端接入 vLLM，目标是在沐曦 GPU 上获得接近 CUDA 生态的开发体验；DLinfer 也将 MetaX 作为其支持的硬件后端之一\cite{metax2024vllm_metax,shailab2024dlinfer}。 \\
 
-燧原科技 & Enflame GCU，S60/L600 等 & vLLM-GCU，FastDeploy-Enflame & vLLM-GCU 面向燧原 GCU 适配 vLLM，支持量化、Fused MoE、Multi-LoRA、自动 Prefix Cache、Chunked Prefill、Speculative Decoding 等推理特性；FastDeploy 也提供燧原硬件部署说明\cite{enflame_vllm_gcu_2026,enflame_vllm_doc_2026,fastdeploy_2026}。 \\
+燧原科技 & Enflame GCU，S60/L600 等 & vLLM-GCU，FastDeploy-Enflame & vLLM-GCU 面向燧原 GCU 适配 vLLM，支持量化、Fused MoE、Multi-LoRA、自动 Prefix Cache、Chunked Prefill、Speculative Decoding 等推理特性；FastDeploy 也提供燧原硬件部署说明\cite{enflame2024vllm_gcu,enflame2024fastdeploy_enflame,baidu2025fastdeploy}。 \\
 
-天数智芯 / DeepSpark 生态 & Iluvatar CoreX、智铠/天垓系列 & IxRT，IGIE，DeepSparkInference，FastDeploy-Iluvatar & IxRT 和 IGIE 分别面向高性能推理运行时和基于 TVM 的通用推理引擎，DeepSparkInference 提供包括 ChatGLM、Baichuan、Qwen 等模型在内的推理示例；FastDeploy 也提供 Iluvatar CoreX 安装与部署路径\cite{iluvatar_deepspark_inference_2026,fastdeploy_iluvatar_2026}。 \\
+天数智芯 / DeepSpark 生态 & Iluvatar CoreX、智铠/天垓系列 & IxRT，IGIE，DeepSparkInference，FastDeploy-Iluvatar & IxRT 和 IGIE 分别面向高性能推理运行时和基于 TVM 的通用推理引擎，DeepSparkInference 提供包括 ChatGLM、Baichuan、Qwen 等模型在内的推理示例；FastDeploy 也提供 Iluvatar CoreX 安装与部署路径\cite{iluvatar2024ixrt,iluvatar2024deepspark_infer}。 \\
 
-海光信息 & Hygon DCU，K100-AI 等 & FastDeploy-Hygon DCU & 官方 FastDeploy 文档给出了在海光 DCU 上部署 ERNIE 系列模型的示例，说明该方向已有面向大模型推理的公开部署路径。但公开资料更多体现为部署适配和示例，成熟度仍需通过复现实验进一步判断\cite{hygon_fastdeploy_2026,fastdeploy_2026}。 \\
+海光信息 & Hygon DCU，K100-AI 等 & FastDeploy-Hygon DCU & 官方 FastDeploy 文档给出了在海光 DCU 上部署 ERNIE 系列模型的示例，说明该方向已有面向大模型推理的公开部署路径。但公开资料更多体现为部署适配和示例，成熟度仍需通过复现实验进一步判断\cite{hygon2024fastdeploy_hygon,baidu2025fastdeploy}。 \\
 
-壁仞科技 & Biren SUPA / BR 系列加速器 & BIRENSUPA，EngineX-Biren vLLM 适配 & 壁仞公开开发者生态展示了 BIRENSUPA 软件平台；同时公开模型社区中存在基于 vLLM OOT 插件的壁仞适配项目。由于公开资料相对有限，综述中宜将其列为待持续跟踪的适配生态，而非直接给出性能结论\cite{biren_developer_2026,enginex_biren_vllm_2026}。 \\
+壁仞科技 & Biren SUPA / BR 系列加速器 & BIRENSUPA，EngineX-Biren vLLM 适配 & 壁仞公开开发者生态展示了 BIRENSUPA 软件平台；同时公开模型社区中存在基于 vLLM OOT 插件的壁仞适配项目。由于公开资料相对有限，综述中宜将其列为待持续跟踪的适配生态，而非直接给出性能结论\cite{biren2024supadoc,biren2024vllm_biren}。 \\
 
-瀚博半导体 / Vastai 生态 & Vastai GPU，VACC/VUCA 软件栈 & Xinference VACC，Vastai 开发者平台 & 瀚博侧公开资料更多体现为开发者平台和模型生态；Xinference 等服务平台已出现对 Vastai GPU/VACC 的适配支持。该方向可归入国产硬件服务化部署平台生态，而不是单独的核心推理引擎\cite{vastai_developer_2026,xinference_heterogeneous_2026}。 \\
+瀚博半导体 / Vastai 生态 & Vastai GPU，VACC/VUCA 软件栈 & Xinference VACC，Vastai 开发者平台 & 瀚博侧公开资料更多体现为开发者平台和模型生态；Xinference 等服务平台已出现对 Vastai GPU/VACC 的适配支持。该方向可归入国产硬件服务化部署平台生态，而不是单独的核心推理引擎\cite{vastai2024devdoc,xinference2025doc}。 \\
 
-Xinference / GPUStack 等平台 & 多类异构 GPU/NPU & Xinference，GPUStack & 这类项目位于模型服务和集群管理层，通常不直接替代 vLLM、SGLang、LMDeploy 等推理引擎，而是对其进行编排、部署和多硬件管理。它们适合放在“服务化与运维平台”小节中讨论\cite{xinference_heterogeneous_2026,gpustack_2026}。 \\
+Xinference / GPUStack 等平台 & 多类异构 GPU/NPU & Xinference，GPUStack & 这类项目位于模型服务和集群管理层，通常不直接替代 vLLM、SGLang、LMDeploy 等推理引擎，而是对其进行编排、部署和多硬件管理。它们适合放在“服务化与运维平台”小节中讨论\cite{xinference2025doc,gpustack2024repo}。 \\
 
-\bottomrule
 \end{longtable}
 \end{small}
 
+基于上述生态实践与技术特征分析，结合摘要提出的分析框架，本文从\textbf{生态兼容性、性能上限、复杂任务支持、运行时治理能力、长期维护成本}五个核心维度，对三类技术路线进行系统性对比，结果如表\ref{tab:comparison-matrix}所示。
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{国产推理引擎三类技术路线多维度对比}
+\label{tab:comparison-matrix}
+\begin{tabularx}{\textwidth}{L{2.2cm}YYYY}
+\toprule
+对比维度 & 开源主干适配路线 & 平台一体化路线 & 混合式架构路线 \\
+\midrule
+生态兼容性 & 极高：完全兼容主流开源生态 & 较低：仅支持自研硬件 & 高：向上兼容主流框架 \\
+单硬件性能上限 & 中：受限于框架抽象层 & 极高：全栈协同，原生优化 & 中高：平衡抽象与性能 \\
+复杂任务支持 & 极高：社区特性同步快 & 中：依赖厂商研发周期 & 高：适配灵活度高 \\
+运行时治理 & 中高：依赖框架原生能力 & 极高：全栈可控，定制深度 & 高：可基于统一底座构建 \\
+长期维护成本 & 中高：需持续跟进上游 & 高：全栈自研，投入大 & 低：一次适配，多处复用 \\
+核心适用场景 & 多硬件兼容、快速迭代 & 单硬件锁定、极致性能 & 异构集群、规模化部署 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+该对比结果清晰地呈现了三类路线的技术取舍：不存在绝对最优的技术路线，仅存在与业务场景、硬件锁定程度、研发资源匹配的最优选型。这也呼应了本文核心观点：国产推理系统的核心竞争力不在于局部算子的极致性能，而在于技术路线与场景需求的匹配度，以及平台契约、运行时组织和交付闭环的协同能力\cite{caict2024whitepaper,zhang2024domestic}。
+
 上述生态显示出几个趋势。首先，国产算力适配正在从修改上游推理框架源码转向硬件插件化和后端解耦。这种方式能够降低维护成本，也便于跟随 vLLM、SGLang 等主流推理框架的快速演进。其次，厂商原生推理引擎仍然重要，尤其是在算子融合、图优化、MoE 通信、低精度量化和特定硬件内存层次优化方面，原生后端通常更容易发挥硬件特性。再次，DLinfer、Triton-Ascend、FastDeploy 等中间层说明，国产算力生态正在从单点适配走向“统一接口 + 厂商实现”的模式。
+
+在生态快速演进的同时，国产算力推理引擎仍面临以下三大核心挑战，这些挑战也构成了本文后续引入“一个底座、三条主路径”分析框架的出发点：
+\begin{enumerate}[leftmargin=*, label=(\arabic*)]
+    \item \textbf{生态碎片化与标准化的矛盾}：国产算力生态目前仍存在“一硬件一栈、一框架一适配”的碎片化现象。不同硬件平台的基础软件栈、算子接口与通信语义差异巨大，导致行业重复适配成本极高。这要求系统必须在架构底层构建统一的抽象底座，以吸收平台差异\cite{cesi2024standard}。
+    \item \textbf{开源生态兼容与自主可控的矛盾}：主流推理框架体系仍由海外社区主导，国产适配多处于“跟随式”状态。如何在深度兼容开源生态的同时，构建自主可控的执行架构与状态治理能力，是掌握技术演进话语权的关键。
+    \item \textbf{性能极致优化与工程交付闭环的矛盾}：现有优化多聚焦于单算子或单模型的峰值性能，而相对忽视生产环境下的工程交付闭环。生产级推理系统的核心竞争力在于执行、状态与成本三者的协同优化，而非实验室环境下的指标罗列\cite{qian2024hetero}。
+\end{enumerate}
+
+上述矛盾说明，单纯的“算子替换”已不足以支撑国产推理引擎的持续演进。为此，第 3 节将引入“一个底座、三条主路径”的分析骨架，从系统架构层面解构如何应对上述挑战。
