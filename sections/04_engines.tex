@@ -66,18 +66,18 @@
 \begin{table*}[t]
 \centering
 \footnotesize
-\setlength{\tabcolsep}{4pt}
+\setlength{\tabcolsep}{3pt}
 \caption{国产算力推理路线的复杂度落点}
 \label{tab:domestic-route-complexity}
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.3cm}p{3.0cm}p{3.1cm}X}
+\begin{tabularx}{\textwidth}{L{2.3cm}L{3.0cm}L{3.1cm}Y}
 \toprule
 技术路线 & 代表对象 & 复杂度主要落点 & 对国产算力适配的关键意义 \\
 \midrule
-插件式后端适配 & vLLM-Ascend、vLLM-MLU、SGLang Ascend\citep{vllmascend,vllmmlu,sglang_ascend_npu} & plugin backend、attention backend、分布式运行时与版本矩阵 & 以较低上层接口改动把 Ascend NPU、寒武纪 MLU 等国产硬件纳入 vLLM/SGLang 语义，但成熟度受 CANN、torch\_npu、厂商 SDK 与上游版本节奏约束 \\
-平台一体化 & MindIE\citep{mindie} & SDK/runtime/compiler、服务模板、监控与交付链路 & 把昇腾平台的编译、运行时和服务化交付收敛到平台栈内部，适合强调统一交付的场景，但不宜写成完全开源的通用引擎 \\
+插件式后端适配 & vLLM-Ascend、vLLM-MLU、SGLang Ascend\citep{vllmascend,vllmmlu,sglang_ascend_npu} & plugin backend、attention backend、分布式运行时、版本矩阵 & 以较低上层接口改动把 Ascend NPU、寒武纪 MLU 等国产硬件纳入 vLLM/SGLang 语义，但成熟度受 CANN、torch\_npu、厂商 SDK 与上游版本节奏约束 \\
+平台一体化 & MindIE\citep{mindie} & SDK/runtime/compiler、服务模板、监控与交付链路 & 把 Ascend 平台的编译、运行时和服务化交付收敛到平台栈内部，适合强调统一交付的场景，但不宜写成完全开源的通用引擎 \\
 国产独立引擎 & Chitu、xLLM\citep{chitu_tsinghua_news,chitu_github,xllm_docs,xllm_service,xllm_tech_report} & service state machine、PD/EPD、KV Cache、低精度与多硬件部署闭环 & 说明国产推理系统不只是在主流框架中补后端，也可以围绕状态治理、缓存治理和部署闭环重构引擎边界 \\
 工具链型部署 & FastDeploy、LMDeploy\citep{fastdeploy_docs,lmdeploy_install,lmdeploy_supported_models} & 模型接入、OpenAI/vLLM 风格接口、量化路径、硬件安装矩阵 & 将国产算力适配沉淀为“部署工具链 + 服务接口 + 硬件适配层”，但不同后端和不同硬件上的 feature parity 需要逐项核验 \\
-跨架构编译/运行时探索 & 中国电信 Triton 统一跨架构框架\citep{chinatelecom_triton_validation_2025,chinatelecom_wbba_2026} & compiler/runtime abstraction、统一算子库、透明运行时插件 & 试图缓解多国产芯片重复适配问题；当前更适合作为跨架构抽象探索，不能写成已开源成熟 serving 引擎 \\
+跨架构编译/运行时探索 & 中国电信 Triton 跨架构框架\citep{chinatelecom_triton_validation_2025,chinatelecom_wbba_2026} & compiler/runtime 抽象、统一算子库、透明运行时插件 & 试图缓解多国产芯片重复适配问题；当前更适合作为跨架构抽象探索，不能写成已开源成熟 serving 引擎 \\
 \bottomrule
 \end{tabularx}
 \end{table*}
@@ -86,7 +86,7 @@
 
 公开社区讨论虽然不能替代系统论文、官方文档和源码分析，但对理解本土路线为何分化仍有补充价值，因为它更直接暴露了复杂度首先溢出的边界。插件式后端适配的摩擦集中在上游主干、插件分支、CANN/torch\_npu、厂商 SDK 与容器镜像的协同；平台一体化路线的摩擦集中在服务模板、监控、配置基线与回滚路径；独立引擎和工具链路线则更容易暴露服务状态机、KV Cache、模型支持矩阵和硬件安装入口之间的一致性问题\citep{zhihu_vllm_ascend_guide,zhihu_vllm_pd_migration,zhihu_mindie_deploy,zhihu_lmdeploy_domestic,xllm_service,fastdeploy_docs}。这些材料的综述价值不是给出新的项目清单，而是证明国产平台的一线痛点往往是“先把系统稳定组织起来”，之后才谈局部极致优化。
 
-工具链型路线进一步说明，国产算力适配不只发生在单一 runtime 的后端层。FastDeploy 更接近飞桨生态中的多硬件推理部署工具链：它把 OpenAI/vLLM 风格服务接口、PD 分离、KV Cache 传输、量化、投机解码、Chunked Prefill 与按硬件划分的安装入口组织在同一工程体系中，面向昆仑芯、海光、昇腾、天数、燧原、沐曦等平台提供公开适配入口\citep{fastdeploy,fastdeploy_docs}。LMDeploy 则需要明确区分 TurboMind 与 PyTorchEngine：前者主要服务 CUDA 高性能路径，国产平台扩展主要通过 PyTorchEngine/Other Platforms 文档进入 Ascend、Cambricon 和 MACA 等后端，并且模型、设备与 eager/graph/量化模式的支持粒度并不对称\citep{lmdeploy,lmdeploy_install,lmdeploy_supported_models}。因此，二者都不宜被简单写成“又一个推理引擎”，而更适合作为“部署工具链 + 服务接口 + 硬件适配层”的工程体系样本。
+工具链型路线进一步说明，国产算力适配不只发生在单一 runtime 的后端层。FastDeploy 更接近飞桨生态中的多硬件推理部署工具链：它把 OpenAI/vLLM 风格服务接口、PD 分离、KV Cache 传输、量化、投机解码和 Chunked Prefill 组织在同一工程体系中，并面向昆仑芯、海光、Ascend、天数、燧原、沐曦等平台提供公开适配入口\citep{fastdeploy,fastdeploy_docs}。LMDeploy 则需要明确区分 TurboMind 与 PyTorchEngine：前者主要服务 CUDA 高性能路径，国产平台扩展主要通过 PyTorchEngine/Other Platforms 文档进入 Ascend、Cambricon 和 MACA 等后端，并且模型、设备与 eager/graph/量化模式的支持粒度并不对称\citep{lmdeploy,lmdeploy_install,lmdeploy_supported_models}。因此，二者都不宜被简单写成“又一个推理引擎”，而更适合作为“部署工具链 + 服务接口 + 硬件适配层”的工程体系样本。
 
 最后还应保留一个次级但有趋势意义的生态位置：LightLLM 更适合作为国内团队在高吞吐 serving、TokenAttention、Efficient Router、调度与内核生态上的重要补充，而不是“成熟国产多硬件主线引擎”；其公开文档中最明确的国产硬件线索主要是 MUSA 路径，默认主线仍明显偏 CUDA/Triton\citep{lightllm,lightllm_docs_2026,gong2025past}。与此不同，中国电信 Triton 统一跨架构推理框架并不处于 vLLM、LMDeploy 或 Chitu 同一层，而更像跨架构编译/运行时抽象：官方材料强调自研 Triton 跨架构编译器、统一算子库、vLLM-Triton 透明嵌入插件和图算融合编译器，用于缓解多国产芯片重复适配问题；但由于代码、许可证、版本矩阵和复现脚本尚未公开，相关迁移时间与性能损耗数字只能作为官方技术验证口径谨慎引用\citep{chinatelecom_triton_validation_2025,chinatelecom_wbba_2026}。
 
@@ -166,14 +166,14 @@ FastDeploy / PaddleNLP Server\citep{fastdeploy,paddlenlp_llm_server} & 工具链
 \begin{table}[t]
 \centering
 \footnotesize
-\setlength{\tabcolsep}{4pt}
+\setlength{\tabcolsep}{3pt}
 \caption{国内团队多模态推理链路工程关注点比较}
 \begin{tabularx}{\linewidth}{L{2.2cm}L{1.9cm}L{2.2cm}Y}
 \toprule
 代表模型 & 主要链路 & 关键工程压力 & 对推理引擎的直接要求 \\
 \midrule
 Qwen2-VL、InternVL2\citep{wang2024qwen2vl,chen2024internvl2} & 多图、文档与 OCR & 动态分辨率切图、视觉 token 膨胀、图文混排带来 shape 波动 & 视觉前处理与文本 prefill 协同、前缀缓存复用、bucket 化与编译抖动控制 \\
-CogVLM2\citep{wang2024cogvlm2} & 视频理解 & 帧采样与跨帧压缩策略影响 encode/decode 资源分配 & 视觉 encoder 批处理、跨阶段资源再平衡、视频前缀组织 \\
+CogVLM2\citep{wang2024cogvlm2} & 视频理解 & 帧采样与跨帧压缩策略影响 encode 与 decode 资源分配 & 视觉 encoder 批处理、跨阶段资源再平衡、视频前缀组织 \\
 Qwen2-Audio 等\citep{chu2024qwen2audio,zeng2024glm4voice,cui2026minicpmo45} & 语音与实时交互 & 音频前端、speech tokenizer、流式 chunk 与打断恢复共同影响时延 & 流式调度、语音文本交错生成、实时率控制与会话状态恢复 \\
 \bottomrule
 \end{tabularx}
