@@ -11,8 +11,8 @@
 
 \draw[flow] (request) -- (sched);
 \draw[flow] (sched) -- (exec);
-\draw[flow, dashed] (exec.south west) -- (ops.east);
-\draw[flow, dashed] (ops.west) -- ++(-12mm,0) |- (request.south);
+\draw[flow, dashed] (exec.south) |- (ops.east);
+\draw[flow, dashed] (ops.west) -| (request.south);
 
 \node[note, below=8mm of ops, text width=5.8cm] {服务层真正的闭环，不只包括调度与返回，也包括异常回退、监控和升级控制。};
 \end{tikzpicture}

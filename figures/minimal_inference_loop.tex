@@ -14,7 +14,9 @@
 \draw[flow] (embed) -- (prefill);
 \draw[flow] (prefill) -- (decode);
 \draw[flow] (decode) -- (output);
-\draw[flow, dashed] (prefill.south west) -- ++(-8mm,-6mm) node[note, left, text width=2.8cm] {首 token 时延} -| (decode.west);
+\draw[flow, dashed] (prefill.south west) -- ++(-9mm,0) coordinate (ttft)
+    -- (ttft |- decode.west) coordinate (ttft2) -- (decode.west);
+\node[note, anchor=east, xshift=-2pt, text width=2.8cm] at ($(ttft)!0.5!(ttft2)$) {首 token 时延};
 
 \node[note, below=8mm of decode, text width=5.2cm] {稳定生成速度主要受 decode 主路径、缓存组织和带宽利用影响。};
 \end{tikzpicture}
