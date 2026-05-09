@@ -14,15 +14,15 @@
 \node[block, fill=cGray, minimum width=48mm] (goal) {\textbf{国产推理引擎路线选择}};
 \node[captionnote, text width=7.6cm, above=3mm of goal] {核心张力：生态兼容性、平台特化深度、交付稳定性};
 
-\node[block, fill=cBlue, below left=16mm and 30mm of goal] (upstream) {\textbf{开源主干后端适配}\\vLLM / SGLang / vLLM-Ascend};
-\node[block, fill=cOrange, below=12mm of goal] (hybrid) {\textbf{混合式架构}\\vLLM-HUST\\上层兼容 + 底层热点特化};
+\node[block, fill=cBlue, below left=16mm and 30mm of goal] (upstream) {\textbf{开源主干适配 / fork 增强}\\vLLM / SGLang / vLLM-HUST};
+\node[block, fill=cOrange, below=12mm of goal] (hybrid) {\textbf{国产原生 / 独立引擎}\\Chitu / xLLM\\自研状态机 + 部署闭环};
 \node[block, fill=cGreen, below right=16mm and 30mm of goal] (integrated) {\textbf{一体化方案}\\MindIE / 编译器 / 运行时协同};
 
 \node[note, fill=cBlue, below=7mm of upstream, xshift=-16mm] (u1) {\textbf{优势}：生态吸收快\\模型跟进快};
 \node[note, fill=cBlue, below=7mm of upstream, xshift=16mm] (u2) {\textbf{代价}：patch 累积\\抽象边界易失稳};
 
-\node[note, fill=cOrange, below=7mm of hybrid, xshift=-16mm] (h1) {\textbf{优势}：兼顾兼容性\\与平台优化};
-\node[note, fill=cOrange, below=7mm of hybrid, xshift=16mm] (h2) {\textbf{代价}：体系复杂\\组织门槛高};
+\node[note, fill=cOrange, below=7mm of hybrid, xshift=-16mm] (h1) {\textbf{优势}：状态治理内生\\边界自主可控};
+\node[note, fill=cOrange, below=7mm of hybrid, xshift=16mm] (h2) {\textbf{代价}：生态吸收慢\\研发投入高};
 
 \node[note, fill=cGreen, below=7mm of integrated, xshift=-16mm] (i1) {\textbf{优势}：交付稳定\\平台约束强};
 \node[note, fill=cGreen, below=7mm of integrated, xshift=16mm] (i2) {\textbf{代价}：生态兼容慢\\上游响应较慢};
