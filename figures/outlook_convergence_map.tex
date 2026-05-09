@@ -1,22 +1,61 @@
+% Purpose: summarize the trend from per-chip backend adaptation toward
+% multiple reusable abstractions in domestic inference systems.
 \begin{tikzpicture}[
-    node distance=18mm and 24mm,
-    block/.style={draw=black!75, line width=0.8pt, rounded corners=2.2pt, minimum width=31mm, minimum height=10mm, align=center, font=\small, inner sep=4pt},
-    centerblock/.style={draw=black!75, line width=0.8pt, rounded corners=3pt, minimum width=40mm, minimum height=12mm, align=center, font=\small\bfseries, inner sep=5pt},
-    note/.style={font=\footnotesize, align=center, fill=white, inner sep=1.2pt, text=black!80},
-    flow/.style={-{Latex[length=2.2mm]}, semithick, draw=black!75}
+    font=\small,
+    node distance=7mm and 9mm,
+    start/.style={draw=black!75, line width=0.75pt, rounded corners=2pt,
+        align=center, fill=gray!8, inner sep=4pt, text width=31mm},
+    track/.style={draw=black!75, line width=0.75pt, rounded corners=2pt,
+        align=left, fill=blue!6, inner sep=4pt, text width=43mm},
+    goal/.style={draw=black!75, line width=0.8pt, rounded corners=2.5pt,
+        align=center, fill=green!8, inner sep=5pt, text width=36mm, font=\small\bfseries},
+    boundary/.style={draw=black!55, line width=0.6pt, rounded corners=2pt,
+        align=center, fill=orange!8, font=\footnotesize, inner sep=3.5pt, text width=108mm},
+    arrow/.style={-{Stealth[length=2.2mm]}, line width=0.7pt, draw=black!75},
+    weakarrow/.style={-{Stealth[length=2.0mm]}, line width=0.6pt, draw=black!55, dashed},
+    group/.style={draw=black!42, line width=0.5pt, rounded corners=3pt, inner sep=5pt}
 ]
-\node[centerblock, fill=gray!8] (goal) {可持续的国产算力\\推理系统底座};
 
-\node[block, fill=blue!9, above left=20mm and 28mm of goal] (plugin) {后端插件化\\平台抽象/注册/可合并优化};
-\node[block, fill=green!10, above right=20mm and 28mm of goal] (runtime) {资源管理与调度\\SLO/迁移/KV Cache/阶段解耦};
-\node[block, fill=orange!12, below left=20mm and 28mm of goal] (eval) {统一评测与观测\\近真实负载/成本/稳定性};
-\node[block, fill=red!8, below right=18mm and 24mm of goal] (model) {模型结构持续演进\\MoE/MLA/多模态/语音交互};
+\node[start] (start) {一芯一后端适配\\kernel / runtime\\局部补丁};
 
-\draw[flow] (plugin.south east) -- (goal.north west);
-\draw[flow] (runtime.south west) -- (goal.north east);
-\draw[flow] (eval.north east) -- (goal.south west);
-\draw[flow] (model.north west) -- (goal.south east);
+\node[track, right=14mm of start, yshift=20mm] (mainline) {
+    \textbf{主流框架后端吸纳}\\
+    vLLM / SGLang plugin backend\\
+    保留接口与调度语义
+};
+\node[track, below=of mainline] (toolchain) {
+    \textbf{工具链化部署}\\
+    模型接入 / OpenAI API\\
+    量化 / 多硬件安装矩阵
+};
+\node[track, below=of toolchain] (platform) {
+    \textbf{平台一体化交付}\\
+    SDK / runtime / compiler\\
+    模板 / 监控 / 回滚
+};
+\node[track, below=of platform] (crossarch) {
+    \textbf{跨架构编译/运行时抽象}\\
+    统一算子 / 透明插件\\
+    多芯迁移
+};
 
-\node[note, text width=6.2cm, above=6mm of goal] {未来竞争将从单点热点优化转向系统能力收敛。};
-\node[note, text width=6.4cm, below=6mm of goal] {平台抽象、运行时、评测与模型演进需要同步推进。};
+\node[goal, right=14mm of platform] (goal) {可持续的国产算力\\推理系统生态};
+\node[boundary, below=9mm of crossarch, xshift=-9mm] (boundary) {
+    评价边界：公开版本矩阵 \quad 可复现实验 \quad feature parity \quad roadmap 与技术验证分层
+};
+
+\node[group, fit=(mainline)(toolchain)(platform)(crossarch),
+    label={[font=\footnotesize\bfseries, fill=white, inner sep=1pt]above:多层抽象并行推进}] {};
+
+\draw[arrow] (start.east) -- (mainline.west);
+\draw[arrow] (start.east) -- (toolchain.west);
+\draw[arrow] (start.east) -- (platform.west);
+\draw[arrow] (start.east) -- (crossarch.west);
+
+\draw[arrow] (mainline.east) -- (goal.west);
+\draw[arrow] (toolchain.east) -- (goal.west);
+\draw[arrow] (platform.east) -- (goal.west);
+\draw[arrow] (crossarch.east) -- (goal.west);
+\draw[weakarrow] (goal.south) |- (boundary.east);
+
 \end{tikzpicture}

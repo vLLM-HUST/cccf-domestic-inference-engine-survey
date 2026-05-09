@@ -1,32 +1,44 @@
+% Purpose: redraw the original complex-request lifecycle with separated rows.
 \begin{tikzpicture}[
-    node distance=9mm and 10mm,
-    stage/.style={draw=black!75, line width=0.8pt, rounded corners=2.2pt, minimum width=29mm, minimum height=10.2mm, align=center, font=\small, inner sep=4pt},
-    side/.style={draw=black!70, line width=0.8pt, rounded corners=2.2pt, minimum width=28mm, align=center, font=\footnotesize, inner sep=3pt},
-    note/.style={font=\footnotesize, align=center, fill=white, inner sep=1.5pt, text=black!80},
-    flow/.style={-{Latex[length=2.2mm]}, semithick, draw=black!75}
+    font=\small,
+    node distance=12mm and 8mm,
+    stage/.style={draw=black!78, line width=0.8pt, rounded corners=2pt,
+        minimum height=10mm, align=center, inner sep=3pt, text width=27mm},
+    side/.style={draw=black!70, line width=0.75pt, rounded corners=2pt,
+        align=center, font=\footnotesize, inner sep=3pt, text width=33mm},
+    note/.style={draw=black!45, line width=0.55pt, rounded corners=2pt,
+        align=center, font=\footnotesize, inner sep=3pt, fill=gray!5, text width=86mm},
+    tag/.style={font=\footnotesize\bfseries, text=black!75, align=center},
+    flow/.style={-{Stealth[length=2.6mm]}, line width=0.95pt, draw=black!82,
+        shorten >=2pt, shorten <=2pt},
+    stateflow/.style={-{Stealth[length=2.4mm]}, line width=0.9pt, draw=black!70,
+        dash pattern=on 3pt off 2pt, shorten >=2pt, shorten <=2pt}
 ]
+
 \node[stage, fill=gray!8] (ingress) {请求进入\\文本/多模态/工具调用};
-\node[stage, fill=blue!9, right=of ingress] (normalize) {请求整形\\长度 bucket / SLO};
-\node[stage, fill=green!10, right=of normalize] (prefill) {前处理与 Prefill\\视觉/语音编码};
+\node[stage, fill=blue!8, right=of ingress] (normalize) {请求整形\\长度 bucket / SLO};
+\node[stage, fill=green!8, right=of normalize] (prefill) {前处理与 Prefill\\视觉/语音编码};
+\node[stage, fill=green!8, right=of prefill] (decode) {Decode\\采样/约束执行};
+\node[tag, above=4mm of prefill] {主执行链路};
 
-\node[stage, fill=green!10, below=13mm of prefill] (decode) {Decode\\采样/约束执行};
-\node[stage, fill=orange!12, right=of decode] (verify) {验证与回退\\grammar / speculative};
+\node[side, fill=green!8, below=18mm of prefill] (cache) {共享状态\\KV Cache / prefix\\迁移元数据};
+\node[stage, fill=orange!10, right=of cache] (verify) {验证与回退\\grammar / speculative};
 \node[stage, fill=gray!8, right=of verify] (finish) {响应返回\\状态释放与观测};
+\node[side, fill=orange!10, below=15mm of finish] (tool) {外部交互\\工具执行 / 回注\\再进入};
+\node[tag, above=4mm of verify] {状态与回退};
 
-\node[side, fill=green!6, left=of decode] (cache) {共享状态\\KV Cache / prefix\\迁移元数据};
-\node[side, fill=orange!7, below=12mm of verify] (tool) {外部交互\\工具执行 / 回注 / 再进入};
+\node[note, below=10mm of tool, xshift=-30mm] (note) {难点不在单步算子，而在跨阶段状态传递、资源复用与回退一致性。};
 
 \draw[flow] (ingress) -- (normalize);
 \draw[flow] (normalize) -- (prefill);
 \draw[flow] (prefill) -- (decode);
-\draw[flow] (decode) -- (verify);
+\draw[flow] (decode.south) -- ++(0,-7mm) -| (verify.north);
 \draw[flow] (verify) -- (finish);
 
-\draw[flow, dashed] (prefill.south west) |- (cache.north east);
-\draw[flow, dashed] (decode.west) -- (cache.east);
-\draw[flow, dashed] (decode.south east) |- (tool.west);
-\draw[flow, dashed] (verify.south) -- (tool.north);
-\draw[flow, dashed] (tool.west) -| ([yshift=-1mm]normalize.south);
+\draw[stateflow] (prefill.south) -- (cache.north);
+\draw[stateflow] (decode.west) -- ++(-5mm,0) |- (cache.north east);
+\draw[stateflow] (verify.south) -- ++(0,-6mm) -| (tool.west);
+\draw[stateflow] (decode.east) -- ++(6mm,0) |- (tool.north);
+\draw[stateflow] (tool.south) -- ++(0,-7mm) -| (normalize.south);
 
-\node[note, text width=7.2cm, below=8mm of decode, xshift=23mm] {关键难点是跨阶段状态传递、资源复用与回退一致性。};
 \end{tikzpicture}
