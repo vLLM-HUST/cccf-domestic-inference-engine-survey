@@ -1,4 +1,6 @@
 build/
+.tectonic/
+.tectonic/**
 *.aux
 *.bbl
 *.bcf
