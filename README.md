@@ -39,3 +39,16 @@ make pdf
 - 根据专刊要求替换作者、单位、摘要格式
 - 补充图表与国内生态对比表
 - 统一参考文献条目格式
+
+## 贡献者身份映射备注
+
+以下映射用于归并 GitHub 账号、Git 提交身份与论文作者/协作贡献者实名，便于后续进行作者排序、贡献统计与署名核对。
+
+- ShuhaoZhangTony -> 张书豪
+- qixinzhang2601 -> 张书豪
+- LuckyWindovo -> 杜雨枫
+- Sadboineedluv -> 杜雨枫
+- Remygred -> 刘世峰
+- Jerry01020 -> 邱瑞杰
+- kms12425-ctrl -> 马俊豪
+- JunHao Ma -> 马俊豪
