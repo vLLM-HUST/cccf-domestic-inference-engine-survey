@@ -1,9 +1,43 @@
+\definecolor{obsBlue}{HTML}{DCEEFF}
+\definecolor{obsGreen}{HTML}{DDF3E4}
+\definecolor{obsOrange}{HTML}{FCE8D4}
+\definecolor{obsGray}{HTML}{F3F4F6}
+
 \begin{tikzpicture}[
-    node distance=4mm,
-    layer/.style={draw=black!75, line width=0.8pt, rounded corners=2.2pt, minimum width=56mm, minimum height=9mm, align=center, font=\small, inner sep=4pt}
+    node distance=11mm and 15mm,
+    core/.style={circle, draw=black!70, line width=0.9pt, minimum size=22mm, align=center, font=\small\bfseries, fill=obsGray},
+    petal/.style={circle, draw=black!70, line width=0.8pt, minimum size=17mm, align=center, font=\small\bfseries},
+    note/.style={font=\scriptsize\sffamily, text=black!72, align=center},
+    link/.style={-{Latex[length=2.2mm,width=1.8mm]}, draw=black!70, line width=0.8pt},
+    guide/.style={draw=black!40, dashed, line width=0.65pt}
 ]
-\node[layer, fill=gray!8] (top) {统一接口语义与版本留痕};
-\node[layer, fill=blue!9, below=of top] (mid1) {统一指标口径\\TTFT / TPOT / 吞吐 / 尾时延};
-\node[layer, fill=green!10, below=of mid1] (mid2) {统一状态描述\\命中率 / 驻留 / 迁移 / 回退};
-\node[layer, fill=orange!12, below=of mid2] (bot) {统一观测证据链\\trace / log / metrics / 回归记录};
+
+\node[core] (core) {统一\\口径};
+
+\node[petal, fill=obsBlue, above left=12mm and 20mm of core] (api) {接口\\语义};
+\node[petal, fill=obsBlue, above right=12mm and 20mm of core] (metric) {指标\\口径};
+\node[petal, fill=obsGreen, below left=12mm and 20mm of core] (state) {状态\\描述};
+\node[petal, fill=obsOrange, below right=12mm and 20mm of core] (trace) {观测\\证据};
+
+\node[note, above=3mm of api] {协议 / 版本};
+\node[note, above=3mm of metric] {TTFT / TPOT};
+\node[note, below=3mm of state] {命中 / 迁移};
+\node[note, below=3mm of trace] {trace / log};
+
+\draw[guide] (api) -- (core);
+\draw[guide] (metric) -- (core);
+\draw[guide] (state) -- (core);
+\draw[guide] (trace) -- (core);
+
+\draw[link] (api.east) to[bend left=16] (metric.west);
+\draw[link] (metric.south) to[bend left=16] (trace.north);
+\draw[link] (trace.west) to[bend left=16] (state.east);
+\draw[link] (state.north) to[bend left=16] (api.south);
+
+\node[draw=black!60, rounded corners=2.2pt, fill=white, inner sep=4pt, align=center, font=\scriptsize\sffamily, below=21mm of core, minimum width=58mm] (outcome) {路线比较 \quad $\rightarrow$ \quad 回归验证 \quad $\rightarrow$ \quad 交付诊断};
+\draw[link] (core) -- (outcome);
+
+\node[note, right=12mm of metric, align=left] {统一后才能\\跨平台比较};
+\node[note, left=12mm of state, align=right] {把指标、状态与\\日志放进同一证据链};
+
 \end{tikzpicture}
