@@ -4,6 +4,14 @@
 
 当前提供的是一套便于启动写作的中文 LaTeX 骨架，基于 `ctexart` 组织章节、参考文献与编译脚本。若后续拿到 CCCF 官方模板，只需要将正文内容迁移到对应模板中即可。
 
+## 已编译稿预览
+
+GitHub README 不能直接内嵌 PDF 阅读器，这里提供首页预览图和已编译 PDF 直达链接：
+
+[查看已编译综述 PDF](rendered/main.pdf)
+
+![综述首页预览](rendered/page-1.png)
+
 ## 目录结构
 
 - `main.tex`: 主文档入口
@@ -11,6 +19,7 @@
 - `refs.bib`: BibTeX 参考文献库
 - `figures/`: 图片目录
 - `build/`: 编译输出目录
+- `rendered/`: 供 README 展示的已编译 PDF 与预览图
 
 ## 编译
 

@@ -1,6 +1,7 @@
 build/
 .cache/
 .tectonic/
+.tectonic_cache/
 .tectonic/**
 *.aux
 *.bbl
@@ -14,3 +15,6 @@ build/
 *.synctex.gz
 *.toc
 *.pdf
+!rendered/
+!rendered/*.pdf
+!rendered/*.png
