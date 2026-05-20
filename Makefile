@@ -22,7 +22,7 @@ pdf:
 ifdef LATEXMK
 	$(LATEXMK) -xelatex -outdir=build main.tex
 else ifdef TECTONIC
-	$(TECTONIC) --outdir build main.tex
+	mkdir -p .cache/tectonic && TECTONIC_CACHE_DIR=.cache/tectonic $(TECTONIC) --outdir build main.tex
 else
 	@echo "No supported LaTeX builder found. Install latexmk or tectonic." >&2
 	@exit 127

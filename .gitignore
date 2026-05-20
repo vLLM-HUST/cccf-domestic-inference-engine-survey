@@ -1,5 +1,6 @@
 build/
 .cache/
+.home/
 .tectonic/
 .tectonic_cache/
 .tectonic/**
