@@ -1,4 +1,7 @@
 PDF_OUT=build/main.pdf
+LOCAL_CACHE_DIR=$(CURDIR)/.cache
+LOCAL_HOME_DIR=$(CURDIR)/.home
+LOCAL_TMP_DIR=$(LOCAL_CACHE_DIR)/tmp
 ifeq ($(OS),Windows_NT)
 ifneq ($(strip $(shell where latexmk 2>NUL)),)
 LATEXMK:=latexmk
@@ -22,7 +25,8 @@ pdf:
 ifdef LATEXMK
 	$(LATEXMK) -xelatex -outdir=build main.tex
 else ifdef TECTONIC
-	mkdir -p .cache/tectonic && TECTONIC_CACHE_DIR=.cache/tectonic $(TECTONIC) --outdir build main.tex
+	mkdir -p $(LOCAL_CACHE_DIR) $(LOCAL_HOME_DIR) $(LOCAL_TMP_DIR)
+	HOME=$(LOCAL_HOME_DIR) XDG_CACHE_HOME=$(LOCAL_CACHE_DIR) TMPDIR=$(LOCAL_TMP_DIR) $(TECTONIC) --outdir build main.tex
 else
 	@echo "No supported LaTeX builder found. Install latexmk or tectonic." >&2
 	@exit 127
