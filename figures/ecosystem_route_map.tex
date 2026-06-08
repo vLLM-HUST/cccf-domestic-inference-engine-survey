@@ -1,0 +1,65 @@
+\definecolor{cBlue}{HTML}{E6F0FA}
+\definecolor{cGreen}{HTML}{E9F5EE}
+\definecolor{cOrange}{HTML}{FCEFE3}
+\definecolor{cGray}{HTML}{F2F3F5}
+\definecolor{cPurple}{HTML}{F2E6F5}
+\begin{tikzpicture}[
+    node distance=9mm and 9mm,
+    scale=1.10,
+    transform shape,
+    route/.style={draw=black!70, line width=0.85pt, rounded corners=2.2pt, minimum width=2.9cm, minimum height=9mm, align=center, font=\small, inner sep=4pt},
+    layer/.style={draw=black!50, line width=0.7pt, rounded corners=2pt, minimum width=3.2cm, minimum height=8mm, align=center, font=\footnotesize, inner sep=3pt},
+    flow/.style={-{Latex[length=2.5mm]}, line width=0.7pt, draw=black!65},
+    note/.style={font=\footnotesize, align=center, text=black!70}
+]
+
+% Title row: three routes
+\node[route, fill=cBlue] (r1) {\textbf{路线一}\\开源主干复用增强};
+\node[route, fill=cGreen, right=9mm of r1] (r2) {\textbf{路线二}\\平台一体化方案};
+\node[route, fill=cPurple, right=9mm of r2] (r3) {\textbf{路线三}\\国产原生/混合式};
+
+% Layer 1: 服务交付层
+\node[layer, fill=cGray, below=12mm of r1] (l1a) {vLLM/SGLang 插件\\OpenAI 兼容接口};
+\node[layer, fill=cGray, below=12mm of r2] (l1b) {MindIE / MagicMind\\服务模板};
+\node[layer, fill=cGray, below=12mm of r3] (l1c) {自研 API 网关\\服务编排};
+
+% Layer 2: 推理引擎核心
+\node[layer, fill=cGray, below=6mm of l1a] (l2a) {继承上游\\调度/缓存/并行};
+\node[layer, fill=cGray, below=6mm of l1b] (l2b) {平台内控\\算子融合/图优化};
+\node[layer, fill=cGray, below=6mm of l1c] (l2c) {自研引擎\\状态治理/调度};
+
+% Layer 3: 后端适配层
+\node[layer, fill=cGray, below=6mm of l2a] (l3a) {后端插件\\硬件能力门控};
+\node[layer, fill=cGray, below=6mm of l2b] (l3b) {厂商 SDK\\CANN/MUSA SDK};
+\node[layer, fill=cGray, below=6mm of l2c] (l3c) {自主适配\\跨平台抽象};
+
+% Layer 4: 硬件
+\node[layer, fill=cOrange, below=6mm of l3a, text width=2.6cm] (l4a) {华为/MLU/DCU\\多硬件};
+\node[layer, fill=cOrange, below=6mm of l3b, text width=2.6cm] (l4b) {单一硬件\\深度绑定};
+\node[layer, fill=cOrange, below=6mm of l3c, text width=2.6cm] (l4c) {自主硬件\\或跨平台};
+
+% Vertical flows
+\draw[flow] (r1) -- (l1a);
+\draw[flow] (l1a) -- (l2a);
+\draw[flow] (l2a) -- (l3a);
+\draw[flow] (l3a) -- (l4a);
+
+\draw[flow] (r2) -- (l1b);
+\draw[flow] (l1b) -- (l2b);
+\draw[flow] (l2b) -- (l3b);
+\draw[flow] (l3b) -- (l4b);
+
+\draw[flow] (r3) -- (l1c);
+\draw[flow] (l1c) -- (l2c);
+\draw[flow] (l2c) -- (l3c);
+\draw[flow] (l3c) -- (l4c);
+
+% Labels
+\node[left=7mm of l1a, font=\footnotesize\bfseries] {服务交付};
+\node[left=7mm of l2a, font=\footnotesize\bfseries] {引擎核心};
+\node[left=7mm of l3a, font=\footnotesize\bfseries] {后端适配};
+\node[left=7mm of l4a, font=\footnotesize\bfseries] {硬件};
+
+% Bottom note
+\node[note, text width=10.2cm, below=6mm of l4b] {三条路线的根本差异不在优化手段，而在系统边界和演进节奏的假设不同};
+\end{tikzpicture}

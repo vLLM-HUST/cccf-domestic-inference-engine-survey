@@ -1,0 +1,40 @@
+\definecolor{cBlue}{HTML}{E6F0FA}
+\definecolor{cGreen}{HTML}{E9F5EE}
+\definecolor{cOrange}{HTML}{FCEFE3}
+\definecolor{cRed}{HTML}{F7E6E6}
+\definecolor{cGray}{HTML}{F2F3F5}
+\begin{tikzpicture}[
+    node distance=11mm and 14mm,
+    scale=1.10,
+    transform shape,
+    challenge/.style={draw=black!70, line width=0.8pt, rounded corners=2.2pt, minimum width=3.0cm, minimum height=10mm, align=center, font=\small, inner sep=4pt},
+    flow/.style={-{Latex[length=2.5mm]}, line width=0.85pt, draw=black!70},
+    amplify/.style={-{Latex[length=2.5mm]}, line width=0.9pt, draw=red!65, dashed},
+    note/.style={font=\footnotesize, align=left, text=black!70}
+]
+
+% Center: unified base
+\node[challenge, fill=cGray, minimum width=3.8cm, minimum height=10mm] (base) {\textbf{统一底座}\\上游演进与评测体系};
+
+% Four challenges around
+\node[challenge, fill=cBlue, above left=13mm and 4mm of base] (c1) {\textbf{平台异构扩散}\\执行路径持续分化};
+\node[challenge, fill=cGreen, above right=13mm and 4mm of base] (c2) {\textbf{复杂任务冲击}\\调度/缓存/状态失控};
+\node[challenge, fill=cOrange, below left=13mm and 4mm of base] (c3) {\textbf{压缩收益失调}\\离线收益难以兑现};
+\node[challenge, fill=cRed, below right=13mm and 4mm of base] (c4) {\textbf{评测体系脱节}\\优化方向与实际背离};
+
+% Flows from challenges to base (challenges feed into base)
+\draw[flow] (c1) -- (base);
+\draw[flow] (c2) -- (base);
+\draw[flow] (c3) -- (base);
+\draw[flow] (c4) -- (base);
+
+% Amplification arrows between challenges
+\draw[amplify, bend left=15] (c1) to node[above, font=\scriptsize, text=red!70] {平台差异抬高抽象成本} (c2);
+\draw[amplify, bend left=15] (c2) to node[right, font=\scriptsize, text=red!70] {侵入补丁加速分叉} (c3);
+\draw[amplify, bend left=15] (c3) to node[below, font=\scriptsize, text=red!70] {离线错觉掩盖缺陷} (c4);
+\draw[amplify, bend left=15] (c4) to node[left, font=\scriptsize, text=red!70] {评测失真延误识别} (c1);
+
+% Center labels
+\node[note, text width=5cm, below=3mm of base] {四类挑战形成相互放大循环};
+\node[note, text width=4cm, above=12mm of c1, xshift=28mm] {单一挑战不可孤立解决};
+\end{tikzpicture}

@@ -6,9 +6,9 @@
     node distance=9mm and 12mm,
     scale=1.12,
     transform shape,
-    block/.style={draw=black!70, line width=0.85pt, rounded corners=2.4pt, align=center, minimum height=11.5mm, inner sep=4.5pt, font=\normalsize\sffamily},
+    block/.style={draw=black!70, line width=0.85pt, rounded corners=2.4pt, align=center, minimum height=11.5mm, inner sep=4.5pt, font=\normalsize},
     group/.style={draw=black!55, line width=0.8pt, rounded corners=3pt, inner sep=7pt},
-    note/.style={font=\small\sffamily, align=center, fill=white, inner sep=1.8pt, text=black!75},
+    note/.style={font=\small, align=center, fill=white, inner sep=1.8pt, text=black!75},
     flow/.style={-{Latex[length=3.2mm,width=2.1mm]}, line width=0.9pt, draw=black!75}
 ]
 \node[block, fill=cGray, minimum width=3.3cm] (ingress) {\textbf{业务请求}\\文本/长上下文/多模态/工具调用};
@@ -18,10 +18,10 @@
 \node[block, fill=cGreen, minimum width=2.8cm, below=12mm of service, xshift=-8mm] (execute) {\textbf{执行层}\\prefill/decode/并行策略};
 \node[block, fill=cGreen, minimum width=2.8cm, right=of execute] (cache) {\textbf{KV Cache 与状态层}\\前缀复用/迁移/驱逐};
 \node[block, fill=cGreen, minimum width=2.8cm, right=of cache] (backend) {\textbf{后端接口层}\\图模式/算子/能力门控};
-\node[group, fit=(execute)(cache)(backend), label={[font=\small\sffamily\bfseries, fill=white, inner sep=1.5pt]below:运行时核心}] (runtime) {};
+\node[group, fit=(execute)(cache)(backend), label={[font=\small\bfseries, fill=white, inner sep=1.5pt]below:运行时核心}] (runtime) {};
 \node[block, fill=cOrange, minimum width=3.0cm, below=12mm of cache, xshift=-8mm] (compiler) {\textbf{编译器与运行时}\\CANN/MindSpore/插件栈};
 \node[block, fill=cOrange, minimum width=2.7cm, below=10mm of compiler] (device) {\textbf{国产硬件平台}\\NPU/GPU/驱动/通信};
-\node[group, fit=(compiler)(device), label={[font=\small\sffamily\bfseries, fill=white, inner sep=1.5pt]below:平台栈}] (platform) {};
+\node[group, fit=(compiler)(device), label={[font=\small\bfseries, fill=white, inner sep=1.5pt]below:平台栈}] (platform) {};
 
 \draw[flow] (ingress) -- (service);
 \draw[flow] (service) -- (scheduler);

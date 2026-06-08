@@ -7,7 +7,7 @@
     node distance=11mm and 15mm,
     core/.style={circle, draw=black!70, line width=0.9pt, minimum size=22mm, align=center, font=\small\bfseries, fill=obsGray},
     petal/.style={circle, draw=black!70, line width=0.8pt, minimum size=17mm, align=center, font=\small\bfseries},
-    note/.style={font=\scriptsize\sffamily, text=black!72, align=center},
+    note/.style={font=\scriptsize, text=black!72, align=center},
     link/.style={-{Latex[length=2.2mm,width=1.8mm]}, draw=black!70, line width=0.8pt},
     guide/.style={draw=black!40, dashed, line width=0.65pt}
 ]
@@ -34,7 +34,7 @@
 \draw[link] (trace.west) to[bend left=16] (state.east);
 \draw[link] (state.north) to[bend left=16] (api.south);
 
-\node[draw=black!60, rounded corners=2.2pt, fill=white, inner sep=4pt, align=center, font=\scriptsize\sffamily, below=21mm of core, minimum width=58mm] (outcome) {路线比较 \quad $\rightarrow$ \quad 回归验证 \quad $\rightarrow$ \quad 交付诊断};
+\node[draw=black!60, rounded corners=2.2pt, fill=white, inner sep=4pt, align=center, font=\scriptsize, below=21mm of core, minimum width=58mm] (outcome) {路线比较 \quad $\rightarrow$ \quad 回归验证 \quad $\rightarrow$ \quad 交付诊断};
 \draw[link] (core) -- (outcome);
 
 \node[note, right=12mm of metric, align=left] {统一后才能\\跨平台比较};

@@ -1,0 +1,41 @@
+\definecolor{cBlue}{HTML}{E6F0FA}
+\definecolor{cGreen}{HTML}{E9F5EE}
+\definecolor{cOrange}{HTML}{FCEFE3}
+\definecolor{cGray}{HTML}{F2F3F5}
+\definecolor{cRed}{HTML}{F7E6E6}
+\begin{tikzpicture}[
+    node distance=10mm and 10mm,
+    scale=1.10,
+    transform shape,
+    block/.style={draw=black!70, line width=0.8pt, rounded corners=2.2pt, align=center, minimum height=9mm, inner sep=4pt, font=\small},
+    gap/.style={draw=black!55, line width=0.7pt, dashed, rounded corners=2pt, minimum width=9.8cm, minimum height=8mm, fill=red!6, inner sep=2pt, font=\scriptsize, text=black!70},
+    flow/.style={-{Latex[length=2.5mm]}, line width=0.7pt, draw=black!65},
+    note/.style={font=\footnotesize, align=left, text=black!70}
+]
+
+% Top: production serving layer
+\node[block, fill=cBlue, minimum width=9.8cm] (service) {\textbf{生产级推理服务}\\高并发、低时延、多模态、弹性扩缩、SLA 保障\dots};
+
+% Middle: inference engine (core) 
+\node[block, fill=cGreen, minimum width=9.8cm, below=14mm of service] (engine) {\textbf{推理引擎核心}\\连续批处理 \quad KV Cache 管理 \quad 请求调度\\并行策略 \quad 量化压缩 \quad 状态治理};
+
+% Bottom: domestic hardware
+\node[block, fill=cOrange, minimum width=2.6cm, below=18mm of engine, xshift=-32mm] (hw1) {华为 NPU};
+\node[block, fill=cOrange, minimum width=2.2cm, below=18mm of engine, xshift=0mm] (hw2) {寒武纪 MLU};
+\node[block, fill=cOrange, minimum width=2.2cm, below=18mm of engine, xshift=30mm] (hw3) {海光 DCU};
+\node[block, fill=cOrange, minimum width=2.2cm, below=18mm of engine, xshift=58mm] (hw4) {摩尔线程\dots};
+
+% The gap layer
+\node[gap, below=8mm of engine] (gapbox) {\textbf{国产平台的结构性适配鸿沟}\quad 算子库覆盖度 $\cdot$ 编译链差异 $\cdot$ 通信机制差异 $\cdot$ 工具链完备性 $\cdot$ 版本兼容性};
+
+\draw[flow] (service) -- (engine);
+\draw[flow] (engine) -- (gapbox);
+\draw[flow] (gapbox) -- (hw1);
+\draw[flow] (gapbox) -- (hw2);
+\draw[flow] (gapbox) -- (hw3);
+\draw[flow] (gapbox) -- (hw4);
+
+\node[note, right=4mm of service, yshift=-4mm] {$\longleftarrow$ 生产环境的需求不会因为硬件变化而降低};
+\node[note, right=4mm of gapbox, yshift=2mm] {$\longleftarrow$ 各层短板会沿栈放大传播};
+\node[note, right=2mm of hw4, yshift=-2mm] {$\longleftarrow$ 多平台异构加剧系统复杂性};
+\end{tikzpicture}

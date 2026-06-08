@@ -30,15 +30,29 @@
 \renewcommand{\refname}{参考文献}
 \renewcommand{\arraystretch}{1.15}
 
+% -- Float placement: keep figures/tables with surrounding text --
+\renewcommand{\topfraction}{0.85}
+\renewcommand{\bottomfraction}{0.75}
+\renewcommand{\textfraction}{0.10}
+\renewcommand{\floatpagefraction}{0.80}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{5}
+\setlength{\intextsep}{8pt plus 2pt minus 2pt}
+\setlength{\floatsep}{10pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{12pt plus 2pt minus 4pt}
+
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 \usetikzlibrary{arrows.meta,calc,fit,positioning,shapes.geometric}
 \newcounter{algorithm}
 \renewcommand{\thealgorithm}{\arabic{algorithm}}
 
-\titleformat{\section}{\centering\heiti\zihao{-3}}{\thesection}{0.75em}{}
-\titleformat{\subsection}{\heiti\zihao{4}}{\thesubsection}{0.6em}{}
-\titleformat{\subsubsection}{\heiti\zihao{-4}}{\thesubsubsection}{0.5em}{}
+% -- CCCF style: Chinese numeral section headings (一、二、三...) --
+\renewcommand{\thesection}{\chinese{section}}
+\titleformat{\section}{\centering\heiti\zihao{-3}}{\thesection、}{0em}{}
+\titleformat{\subsection}{\heiti\zihao{4}}{\arabic{section}.\arabic{subsection}}{0.6em}{}
+\titleformat{\subsubsection}{\heiti\zihao{-4}}{\arabic{section}.\arabic{subsection}.\arabic{subsubsection}}{0.5em}{}
 
 \titlespacing*{\section}{0pt}{1.2em}{0.8em}
 \titlespacing*{\subsection}{0pt}{0.8em}{0.4em}
@@ -49,66 +63,33 @@
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0pt}
 
-\newcommand{\papertitlecn}{国产算力平台大模型推理引擎综述}
-\newcommand{\papertitleen}{A Survey of Large-Model Inference Engines on Domestic Computing Platforms}
-\newcommand{\authorscn}{张书豪$^{1}$，刘世峰$^{1}$，杜雨枫$^{1}$，马俊豪$^{1}$，邱瑞杰$^{1}$，廖小飞$^{1}$，金海$^{1}$}
-\newcommand{\authorsen}{Shuhao Zhang$^{1}$, Shifeng Liu$^{1}$, Yufeng Du$^{1}$, Junhao Ma$^{1}$, Ruijie Qiu$^{1}$, Xiaofei Liao$^{1}$, Hai Jin$^{1}$}
-\newcommand{\affiliationscn}{$^{1}$华中科技大学计算机科学与技术学院，大数据技术与系统国家地方联合工程研究中心，服务计算技术与系统教育部重点实验室，集群与网格计算湖北省重点实验室，武汉 430074}
-\newcommand{\affiliationsen}{$^{1}$School of Computer Science and Technology, Huazhong University of Science and Technology, National Engineering Research Center for Big Data Technology and System, Services Computing Technology and System Lab, Cluster and Grid Computing Lab, Wuhan 430074, China}
-\newcommand{\contactline}{通信作者：廖小飞，E-mail：xfliao@hust.edu.cn}
-\newcommand{\contactlineen}{Corresponding author: Xiaofei Liao, E-mail: xfliao@hust.edu.cn}
-
-\newcommand{\makecccfstyletitle}{
-	\begin{center}
-		{\bfseries\zihao{2} \papertitlecn\par}
-		\vspace{0.55em}
-		{\zihao{-4} \papertitleen\par}
-		\vspace{0.95em}
-		{\zihao{4} \authorscn\par}
-		\vspace{0.2em}
-		{\zihao{-4} \authorsen\par}
-		\vspace{0.45em}
-		{\zihao{-4} \affiliationscn\par}
-		\vspace{0.15em}
-		{\zihao{5} \affiliationsen\par}
-		\vspace{0.2em}
-		{\zihao{5} \contactline\par}
-		\vspace{0.1em}
-		{\zihao{5} \contactlineen\par}
-	\end{center}
-	\vspace{0.6em}
-}
-
-\newenvironment{cnabstract}{
-	\noindent\textbf{摘\ 要：}
-}{\par}
-
-\newenvironment{enabstract}{
-	\noindent\textbf{Abstract: }
-}{\par}
-
 \begin{document}
 
-\makecccfstyletitle
+% ===========================================
+% Title block (following CCCF 2601 reference style)
+% ===========================================
+\begin{center}
+{\bfseries\zihao{2} 国产算力平台大模型推理引擎综述\par}
+\vspace{0.95em}
+{\zihao{4} 张书豪\textsuperscript{1}，廖小飞\textsuperscript{1}\par}
+\vspace{0.45em}
+{\zihao{5} \textsuperscript{1}大数据技术与系统国家地方联合工程研究中心\par}
+{\zihao{5} 服务计算技术与系统教育部重点实验室\par}
+{\zihao{5} 集群与网格计算湖北省重点实验室\par}
+{\zihao{5} 华中科技大学计算机科学与技术学院\par}
+\end{center}
 
-\begin{cnabstract}
-本文面向国产算力平台上的大模型推理系统，不把综述写成项目名录，而是围绕“生态格局与路线分化--分析骨架与核心架构--基于骨架的路线比较--由路线比较收束出的关键挑战--未来收敛方向”这一主线，讨论国产芯片、编译栈、运行时与部署环境如何共同重塑推理引擎的设计边界。本文以近年可交叉核验的公开证据为基础，综合系统论文与技术报告、官方文档与开源仓库、标准或白皮书，以及少量仅用于补充真实摩擦点的社区部署记录；对仅见于单次演示、新闻稿或未公开复现链路的材料，不直接据此给出性能与成熟度结论。基于这一证据边界，本文首先梳理当前公开生态为何分化为开源主干复用增强路线、平台一体化方案与国产原生/独立路线三类，继而以统一抽象、统一指标与可观测证据链为底座，以执行与通信、状态治理、压缩与成本协同三条主路径为分析骨架，比较不同路线究竟把复杂度主要压在 backend、platform runtime、service state machine 还是 toolchain/control plane。进一步地，本文将平台异构、复杂任务负载、压缩收益不稳定、上游快速演进与评测体系失真等问题收敛为若干结构性挑战，强调国产推理系统的真正竞争点不在局部算子是否足够快，而在平台能力能否沉淀为契约、运行时状态能否被统一治理、成本与交付能否进入同一闭环。最后，本文结合 vLLM-HUST 这类基于 vLLM 的本土增强实践以及 vLLM-Ascend、MindIE、LMDeploy、Chitu、xLLM 等对象，讨论平台抽象、状态中心化运行时、控制面治理与模型结构反向塑造系统边界的未来方向，以期为国产推理系统的比较分析与架构演进提供更可复核的讨论框架。
-\end{cnabstract}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\footnotetext[1]{受新一代人工智能国家科技重大专项资助（课题编号：2025ZD0123804）\\ 通信作者：廖小飞，E-mail：xfliao@hust.edu.cn}
+\renewcommand{\thefootnote}{\arabic{footnote}}
 
-\noindent\textbf{关键词：}国产算力平台；大模型推理；推理引擎；运行时；软硬协同
-
-\vspace{0.5em}
-
-\begin{enabstract}
-This survey examines large-model inference systems on domestic computing platforms through a writing spine that moves from ecosystem divergence to analytical framing, route comparison, structural challenges, and future convergence. Rather than enumerating projects, it builds its discussion on cross-checkable public evidence from system papers and technical reports, official documentation and open-source repositories, standards or white papers, and a limited set of community deployment records used only to expose recurring engineering frictions. Materials that appear only in one-off demos, news releases, or non-reproducible validation reports are not used as standalone evidence for performance or maturity claims. On top of this evidence boundary, the survey explains why the public ecosystem has split into three broad routes: upstream-core reuse and enhancement, vertically integrated platform stacks, and domestic-native or standalone systems. It then adopts an analytical scaffold built on a unified abstraction, metric, and observability base together with three main paths for execution and communication, state governance, and compression-cost co-optimization, and uses this scaffold to compare where different routes place their primary complexity: backend adaptation, platform runtime, service state machine, or toolchain and control plane. Based on this comparison, the survey further distills structural challenges involving hardware heterogeneity, complex workloads, unstable compression gains, rapid upstream evolution, and evidence gaps between benchmarks and production. The core argument is that the decisive issue is not isolated kernel speed, but whether platform capabilities can be turned into stable contracts, runtime states can be governed coherently, and cost, evaluation, and delivery can be brought into one engineering loop. Drawing on localized enhancement practices such as vLLM-HUST together with systems including vLLM-Ascend, MindIE, LMDeploy, Chitu, and xLLM, it finally outlines future directions around platform abstraction, state-centric runtimes, control-plane governance, and the continuing feedback from model evolution into system boundaries.
-\end{enabstract}
-
-\noindent\textbf{Keywords: }domestic computing platforms; large-model inference; inference engine; runtime systems; hardware-software co-design
-
-\vspace{0.8em}
+\vspace{0.6em}
 
 \begin{spacing}{1.2}
 
+% ===========================================
+% Body (no abstract at top — CCCF style puts abstract at end)
+% ===========================================
 \input{sections/01_introduction}
 \input{sections/02_domestic_ecosystem}
 \input{sections/03_architecture}
@@ -117,11 +98,52 @@ This survey examines large-model inference systems on domestic computing platfor
 \input{sections/06_outlook}
 \input{sections/07_conclusion}
 
+% ===========================================
+% Author bio (CCCF style: before references)
+% ===========================================
+\vspace{1em}
+\noindent\begin{minipage}{\linewidth}
+\noindent % Author photo placeholder
+\textbf{金海}~~CCF会士、副理事长。华中科技大学计算机学院教授。主要研究方向为计算机体系结构、计算系统虚拟化、集群计算和云计算、并行I/O。hjin@hust.edu.cn
+\end{minipage}
+
+\vspace{1.2em}
+
+% ===========================================
+% References
+% ===========================================
 \begingroup
 \sloppy
 \bibliographystyle{unsrtnat}
 \bibliography{refs}
 \endgroup
+
+% ===========================================
+% English title, abstract & keywords (CCCF style: at end)
+% ===========================================
+\vspace{1.5em}
+\noindent\textbf{\large A Survey of Large-Model Inference Engines on Domestic Computing Platforms}
+
+\vspace{0.6em}
+\noindent\textbf{Zhang Shuhao, Liu Shifeng, Du Yufeng, Ma Junhao, Qiu Ruijie, Liao Xiaofei, Jin Hai}
+
+\vspace{0.6em}
+\noindent\textbf{Abstract}\quad This survey examines large-model inference engines on domestic computing platforms. Using cross-checkable public evidence, it explains why the ecosystem has split into three routes---upstream-core reuse and enhancement, vertically integrated platform stacks, and domestic-native systems---and adopts an analytical scaffold comprising a unified abstraction/observability base plus three main paths (execution and communication, state governance, compression-cost co-optimization) to compare where each route places its primary complexity. The survey distills structural challenges around hardware heterogeneity, complex workloads, unstable compression gains, and rapid upstream evolution, and outlines future directions including platform capability contracts, state-centric runtime restructuring, and unified control-plane governance.
+
+\vspace{0.4em}
+\noindent\textbf{Key Words}\quad domestic computing platforms; large-model inference; inference engine; runtime systems; hardware-software co-design
+
+% ===========================================
+% Chinese abstract & keywords (CCCF style: at end)
+% ===========================================
+\vspace{1.2em}
+\noindent\textbf{摘要}\quad 本文面向国产算力平台上的大模型推理引擎，围绕"生态格局—分析骨架—路线比较—关键挑战—未来收敛"这一主线展开结构化综述。以可交叉核验的公开证据为基础，本文首先梳理当前生态为何分化为开源主干复用增强、平台一体化方案与国产原生/独立路线三类，继而以"一个底座（统一抽象与可观测证据链）、三条主路径（执行与通信、状态治理、压缩与成本协同）"为分析骨架，比较不同路线把复杂度主要压在何处。在此基础上，将平台异构、复杂任务负载、压缩收益不稳定、上游快速演进与评测体系失真等问题收敛为结构性挑战，并讨论能力契约沉淀、状态中心化运行时重构和控制面一体化治理等未来方向，以期为国产推理引擎的路线选择与架构演进提供可复核的分析框架。
+
+\vspace{0.4em}
+\noindent\textbf{关键词}\quad 国产算力平台；大模型推理；推理引擎；运行时；软硬协同
+
+\vspace{0.4em}
+\noindent\textbf{中图分类号：}TP39
 
 \end{spacing}
 
